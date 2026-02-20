@@ -1,0 +1,184 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap");
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+/* Shadcn */
+:root {
+  --background: hsl(213 31% 91%);
+  --foreground: hsl(0, 0%, 25%);
+
+  --muted: hsl(223 47% 11%);
+  --muted-foreground: hsl(215.4 16.3% 56.9%);
+
+  --accent: hsl(216 34% 17%);
+  --accent-foreground: hsl(210 40% 98%);
+
+  --popover: hsl(224 71% 4%);
+  --popover-foreground: hsl(215 20.2% 65.1%);
+
+  --border: hsl(216 34% 17%);
+  --input: hsl(216 34% 17%);
+
+  --card: hsl(213 31% 91%);
+  --card-foreground: hsl(0, 0%, 25%);
+
+  --primary: hsl(210 40% 98%);
+  --primary-foreground: hsl(222.2 47.4% 1.2%);
+
+  --secondary: hsl(222.2 47.4% 11.2%);
+  --secondary-foreground: hsl(210 40% 98%);
+
+  --destructive: hsl(0 63% 31%);
+  --destructive-foreground: hsl(210 40% 98%);
+
+  --ring: hsl(216 34% 17%);
+
+  --sidebar-background: white;
+  --sidebar-foreground: 240 5.3% 26.1%;
+  --sidebar-primary: 240 5.9% 10%;
+  --sidebar-primary-foreground: 0 0% 98%;
+  --sidebar-accent: 240 4.8% 95.9%;
+  --sidebar-accent-foreground: 240 5.9% 10%;
+  --sidebar-border: 220 13% 91%;
+  --sidebar-ring: 217.2 91.2% 59.8%;
+
+  .dark {
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+body {
+  overflow-x: hidden;
+}
+
+@theme {
+  --color-oha_primary: #f09443;
+  --color-oha_secondary: #1b9d3c;
+  --color-oha_dashbg: #f5f6fa;
+  --color-shadp: #f09443;
+  --color-shads: #1b9d3c;
+  --color-shadsd: #1b883c;
+  --color-oha_background: #ffffff;
+  --color-oha_dark_gray: #404040;
+  --color-oha_light_gray: #666666;
+  --font-oha: Inter serif;
+
+  /* shadcn */
+  --radius: 0.5rem;
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+
+  --font-family-poppins: var(--font-poppins);
+  --font-family-inter: var(--font-inter);
+
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
+
+  @keyframes caret-blink {
+    0%,
+    70%,
+    100% {
+      opacity: 1;
+    }
+    20%,
+    50% {
+      opacity: 0;
+    }
+  }
+
+  @keyframes accordion-down {
+    from {
+      height: 0;
+    }
+
+    to {
+      height: var(--radix-accordion-content-height);
+    }
+  }
+
+  @keyframes accordion-up {
+    from {
+      height: var(--radix-accordion-content-height);
+    }
+
+    to {
+      height: "0";
+    }
+  }
+}
+
+.caret-blink {
+  animation: caret-blink 1.25s ease-out infinite;
+}
+
+.uidbbb {
+  @apply border-2 border-red-600;
+}
+
+.m_input {
+  @apply w-full p-3 bg-gray-100 rounded-md border-none focus:outline-none focus:ring-2 focus:ring-green-700 h-12 text-base;
+}
+
+.react-datepicker {
+  @apply !border-none w-[300px] ml-44 -mt-8;
+}
+.react-datepicker__month-container {
+  @apply !w-full;
+}
+.react-datepicker-ignore-onclickoutside,
+.react-datepicker__triangle {
+  @apply !hidden focus:!hidden;
+}
+
+.ql-container {
+  border: none !important;
+}
+
+.ql-toolbar {
+  border: none !important;
+}
+
+.ql-editor:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+.ql-editor {
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-x: hidden;
+}

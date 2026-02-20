@@ -1,0 +1,26 @@
+VITE_API_URL=https://staging-backend.onehiveafrica.com/api/
+# VITE_API_URL=http://127.0.0.1:8000/api/
+VITE_PAYSTACK_PUBLIC_KEY=pk_test_952593bebef75a099e6cb28fcafa66a45a05d4cc
+VITE_CLOUDINARY_CLOUD_NAME=dbqsensof
+VITE_CLOUDINARY_UPLOAD_PRESET=HiveManager_Bucket_Preset
+
+
+
+    {
+      label: "Income Generated",
+      value: loading ? "..." : formatCurrency(metrics?.income_generated ?? 0),
+      icon: <DollarSign className="text-green-600 w-6 h-6" />,
+      color: "bg-green-100",
+    },
+    {
+      label: "Hives Ready for Harvest",
+      value: loading ? "..." : (metrics?.hives_ready ?? 0).toString(),
+      icon: <Home className="text-orange-500 w-6 h-6" />,
+      color: "bg-orange-100",
+    },
+    {
+      label: "Local Jobs Created",
+      value: loading ? "..." : (metrics?.local_jobs_created ?? 0).toString(),
+      icon: <Briefcase className="text-purple-500 w-6 h-6" />,
+      color: "bg-purple-100",
+    },
