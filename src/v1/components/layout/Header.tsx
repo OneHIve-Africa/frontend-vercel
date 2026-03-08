@@ -32,8 +32,6 @@
 import React, { useEffect, useState } from "react";
 import { Bell, X } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/Avatar";
-import { SidebarTrigger } from "@/components/Sidebar";
-import { Separator } from "@/components/Separator";
 import { logo } from "@/assets";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useUserProfileStore } from "@/v1/features/auth/store/UserProfileStore";
@@ -77,9 +75,8 @@ const HeaderNotifications: React.FC = () => {
         <div className="absolute -right-1 -top-1">
           <span className="relative inline-flex">
             <span
-              className={`absolute inline-flex h-3 w-3 rounded-full bg-red-500 opacity-75 ${
-                unread > 0 ? "animate-ping" : ""
-              }`}
+              className={`absolute inline-flex h-3 w-3 rounded-full bg-red-500 opacity-75 ${unread > 0 ? "animate-ping" : ""
+                }`}
             ></span>
             <span className="relative inline-flex items-center justify-center rounded-full bg-red-600 text-white text-[10px] h-4 min-w-4 px-1">
               {unread}
@@ -196,8 +193,8 @@ const Header: React.FC = () => {
     position?: string;
   };
 
-  const profile = rawProfile as EnhancedProfile;
   const { logout } = useAuthStore();
+  const profile = rawProfile as EnhancedProfile;
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -219,18 +216,14 @@ const Header: React.FC = () => {
     <header className="w-screen z-30">
       <GlobalInvestmentAlert />
       <div
-        className={`w-full ${
-          !isOnboarding ? "fixed" : ""
-        } flex h-16 shrink-0 items-center gap-2 bg-white px-4`}
+        className={`w-full ${!isOnboarding ? "fixed" : ""
+          } flex h-16 shrink-0 items-center gap-2 bg-white px-4`}
       >
-        <Link to="/">
+        <Link to="/" className="pl-5">
           <img src={logo} alt="Logo" className="h-8 mt-3" />
         </Link>
 
-        <div className="flex items-center gap-2">
-          <SidebarTrigger className="-ml-1" />
-          <Separator orientation="vertical" className="h-4 md:hidden" />
-        </div>
+
 
         <div className="ml-auto flex items-center gap-5">
           <HeaderNotifications />
@@ -249,8 +242,8 @@ const Header: React.FC = () => {
                       {isLoading
                         ? "..."
                         : profile
-                        ? getInitials(profile.first_name, profile.last_name)
-                        : ""}
+                          ? getInitials(profile.first_name, profile.last_name)
+                          : ""}
                     </AvatarFallback>
                   )}
                 </Avatar>
@@ -259,12 +252,12 @@ const Header: React.FC = () => {
                     {isLoading
                       ? "Loading..."
                       : profile
-                      ? `${profile.first_name} ${profile.last_name}`
-                      : ""}
+                        ? `${profile.first_name} ${profile.last_name}`
+                        : ""}
                   </h2>
                   <h3 className="text-xs font-medium text-oha_primary">
                     {profile?.role === "admin" ||
-                    profile?.position === "Administrator"
+                      profile?.position === "Administrator"
                       ? "Administrator"
                       : "Investor"}
                   </h3>
@@ -276,7 +269,7 @@ const Header: React.FC = () => {
                 <Link
                   to={
                     profile?.role === "admin" ||
-                    profile?.position === "Administrator"
+                      profile?.position === "Administrator"
                       ? "/admin/settings"
                       : "/settings"
                   }
