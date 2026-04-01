@@ -5,7 +5,7 @@ import Sidebar from "./Sidebar";
 import Header from "./Header";
 import { useSidebar } from "@/v1/context/SidebarContext";
 import NetworkStatusIndicator from "./NetworkStatusIndicator";
-import BumbleChatbot from "@/v1/components/common/BumbleChatbot";
+import NaaChatbot from "@/v1/components/common/NaaChatbot";
 
 const Layout: React.FC = () => {
   const { isOpen } = useSidebar();
@@ -27,7 +27,7 @@ const Layout: React.FC = () => {
         </div>
       </div>
       <NetworkStatusIndicator />
-      <BumbleChatbot />
+      <NaaChatbot />
     </div>
   );
 };

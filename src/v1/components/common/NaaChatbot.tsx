@@ -13,14 +13,14 @@ interface UIMessage {
     timestamp: Date;
 }
 
-const BumbleChatbot: React.FC = () => {
+const NaaChatbot: React.FC = () => {
     const location = useLocation();
     const [isOpen, setIsOpen] = useState(false);
     const [message, setMessage] = useState("");
     const [messages, setMessages] = useState<UIMessage[]>([
         {
             id: "1",
-            text: "Bzz! I'm Bumble, your hive assistant. How can I help you today?",
+            text: "Hi! I'm Naa, your hive assistant. How can I help you today?",
             sender: "bot",
             timestamp: new Date(),
         },
@@ -130,7 +130,7 @@ const BumbleChatbot: React.FC = () => {
                                     </span>
                                 </div>
                                 <div>
-                                    <h3 className="font-semibold text-lg leading-tight">Bumble</h3>
+                                    <h3 className="font-semibold text-lg leading-tight">Naa</h3>
                                     <p className="text-xs text-white/80 font-medium">Virtual Assistant</p>
                                 </div>
                             </div>
@@ -160,7 +160,7 @@ const BumbleChatbot: React.FC = () => {
                                             <div className="flex items-center gap-2 mb-1">
                                                 <Bot className="h-3.5 w-3.5 text-oha_primary" />
                                                 <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">
-                                                    Bumble
+                                                    Naa
                                                 </span>
                                             </div>
                                         )}
@@ -199,7 +199,7 @@ const BumbleChatbot: React.FC = () => {
                                     type="text"
                                     value={message}
                                     onChange={(e) => setMessage(e.target.value)}
-                                    placeholder="Ask Bumble anything..."
+                                    placeholder="Ask Naa anything..."
                                     className="flex-1 bg-transparent px-4 py-2 text-sm focus:outline-none placeholder-gray-400 text-gray-700 h-10"
                                 />
                                 <button
@@ -241,4 +241,4 @@ const BumbleChatbot: React.FC = () => {
     );
 };
 
-export default BumbleChatbot;
+export default NaaChatbot;
