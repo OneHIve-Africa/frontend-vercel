@@ -1,4 +1,4 @@
-import { SidebarProvider } from "./components/Sidebar";
+import { SidebarProvider } from "./v1/context/SidebarContext";
 import { motion } from "framer-motion";
 import { Toaster } from "react-hot-toast";
 import LogRocket from "logrocket";

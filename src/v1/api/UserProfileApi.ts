@@ -44,7 +44,7 @@ class UserProfileApi extends Api {
         if (pos.includes("farmer")) return "farmer";
         return "investor";
       }
-    } catch {}
+    } catch { }
     return "investor";
   }
 
@@ -63,6 +63,10 @@ class UserProfileApi extends Api {
     data: Partial<UserProfile>
   ): Promise<ApiResponse<UserProfile>> {
     return this.put<UserProfile>(this.profilePath(), data);
+  }
+
+  public async createAdmin(data: any): Promise<ApiResponse<any>> {
+    return this.post<any>("/admin_profile/create-admin/", data);
   }
 }
 

@@ -3,31 +3,31 @@ import React from "react";
 import { Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
-import { SidebarInset, useSidebar } from "@/components/Sidebar";
+import { useSidebar } from "@/v1/context/SidebarContext";
 import NetworkStatusIndicator from "./NetworkStatusIndicator";
+import NaaChatbot from "@/v1/components/common/NaaChatbot";
 
 const Layout: React.FC = () => {
-  const side = useSidebar();
-  // console.log(side.state);
+  const { isOpen } = useSidebar();
 
   return (
     <div className="flex flex-col h-screen bg-white">
       <Header />
       <div className="flex flex-1 bg-white">
         <Sidebar />
-        <SidebarInset
-          className={` bg-white uid pt-14 ${
-            side.open ? "md:pl-[16rem]" : "md:pl-[5rem]"
-          }`}
+        <div
+          className={`bg-white uid pt-14 flex flex-1 flex-col transition-all duration-300 ${isOpen ? "md:pl-[16rem]" : "md:pl-[5rem]"
+            }`}
         >
-          <main className="flex flex-1 p-6 relative bg-gray-100">
+          <main className="flex flex-1 flex-col p-6 relative bg-gray-100 min-h-[calc(100vh-4rem)]">
             <div className="flex-1 overflow-y-auto">
               <Outlet />
             </div>
           </main>
-        </SidebarInset>
+        </div>
       </div>
       <NetworkStatusIndicator />
+      <NaaChatbot />
     </div>
   );
 };

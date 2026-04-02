@@ -6,6 +6,7 @@ import SystemConfigForm from "../components/SystemConfigForm";
 import UserAccessTable from "../components/UserAccessTable";
 import LoginSettingsForm from "../components/LoginSettingsForm";
 import BackupRecovery from "../components/BackupRecovery";
+import AddAdminModal from "../components/AddAdminModal";
 
 interface TabItem {
   name: string;
@@ -16,6 +17,7 @@ const SettingsPage: React.FC = () => {
   const [activeMenu, setActiveMenu] = useState<number>(0);
   const [filter, setFilter] = useState<string>("admin"); // Default view: Admin only
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [isAddAdminOpen, setIsAddAdminOpen] = useState(false);
 
   const tabData: TabItem[] = [
     { name: "User Access Controls", id: 0 },
@@ -30,7 +32,7 @@ const SettingsPage: React.FC = () => {
     { label: "Investors", value: "investor" },
     { label: "All Users", value: "all" },
   ];
-  
+
   return (
     <div>
       <div className="flex justify-between items-center w-full p-4 mb-4">
@@ -45,35 +47,38 @@ const SettingsPage: React.FC = () => {
 
         {/* Buttons */}
         <div className="flex items-center gap-3">
-          <button className="bg-oha_primary text-white text-sm font-medium rounded-full px-5 py-2 transition cursor-pointer hover:bg-opacity-90">
+          <button
+            onClick={() => setIsAddAdminOpen(true)}
+            className="bg-oha_primary text-white text-sm font-medium rounded-full px-5 py-2 transition cursor-pointer hover:bg-opacity-90"
+          >
             Add admin
           </button>
-          
+
           <div className="relative">
-              <button 
-                onClick={() => setIsFilterOpen(!isFilterOpen)}
-                className="flex items-center gap-1 border border-gray-300 rounded-full px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 transition cursor-pointer"
-              >
-                {filterOptions.find(opt => opt.value === filter)?.label || "Filter"}
-                <ChevronDown className="w-4 h-4" />
-              </button>
-              
-              {isFilterOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10 border border-gray-100">
-                    {filterOptions.map((option) => (
-                        <button
-                            key={option.value}
-                            onClick={() => {
-                                setFilter(option.value);
-                                setIsFilterOpen(false);
-                            }}
-                            className={`block w-full text-left px-4 py-2 text-sm ${filter === option.value ? 'bg-gray-50 text-oha_primary font-medium' : 'text-gray-700 hover:bg-gray-50'}`}
-                        >
-                            {option.label}
-                        </button>
-                    ))}
-                </div>
-              )}
+            <button
+              onClick={() => setIsFilterOpen(!isFilterOpen)}
+              className="flex items-center gap-1 border border-gray-300 rounded-full px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 transition cursor-pointer"
+            >
+              {filterOptions.find(opt => opt.value === filter)?.label || "Filter"}
+              <ChevronDown className="w-4 h-4" />
+            </button>
+
+            {isFilterOpen && (
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10 border border-gray-100">
+                {filterOptions.map((option) => (
+                  <button
+                    key={option.value}
+                    onClick={() => {
+                      setFilter(option.value);
+                      setIsFilterOpen(false);
+                    }}
+                    className={`block w-full text-left px-4 py-2 text-sm ${filter === option.value ? 'bg-gray-50 text-oha_primary font-medium' : 'text-gray-700 hover:bg-gray-50'}`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -89,11 +94,10 @@ const SettingsPage: React.FC = () => {
             <motion.div
               key={item.id}
               whileHover={{ scale: 1.03 }}
-              className={`cursor-pointer px-8 py-6 transition-all duration-300 ${
-                activeMenu === item.id
+              className={`cursor-pointer px-8 py-6 transition-all duration-300 ${activeMenu === item.id
                   ? "border-b-2 border-oha_primary text-oha_primary font-semibold"
                   : "text-gray-600"
-              }`}
+                }`}
               onClick={() => setActiveMenu(item.id)}
             >
               {item.name}
@@ -112,18 +116,26 @@ const SettingsPage: React.FC = () => {
               transition={{ duration: 0.3 }}
             >
               {activeMenu === 0 ? (
-                  <UserAccessTable filter={filter} />
+                <UserAccessTable filter={filter} />
               ) : activeMenu === 1 ? (
-                  <LoginSettingsForm />
+                <LoginSettingsForm />
               ) : activeMenu === 2 ? (
-                  <BackupRecovery />
+                <BackupRecovery />
               ) : (
-                  <SystemConfigForm />
+                <SystemConfigForm />
               )}
             </motion.div>
           </AnimatePresence>
         </div>
       </motion.div>
+
+      <AddAdminModal
+        isOpen={isAddAdminOpen}
+        onClose={() => setIsAddAdminOpen(false)}
+        onSuccess={() => {
+          // You could trigger a table refresh here if your table accepts a refresh prop
+        }}
+      />
     </div>
   );
 };
