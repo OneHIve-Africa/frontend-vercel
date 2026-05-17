@@ -66,7 +66,7 @@ class UserProfileApi extends Api {
   }
 
   public async createAdmin(data: any): Promise<ApiResponse<any>> {
-    return this.post<any>("/admin_profile/create-admin/", data);
+    return this.post<any>("/admin-profile/create-admin/", data);
   }
 }
 
