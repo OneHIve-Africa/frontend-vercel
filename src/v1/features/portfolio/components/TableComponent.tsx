@@ -10,11 +10,39 @@ import {
 } from "@/components/Table";
 import { dateUtils } from "@/v1/utils/dateutils";
 
+import { useNavigate } from "react-router-dom";
+import { ArrowRight } from "lucide-react";
+import { bee } from "@/assets";
+
 interface TableComponentProps {
   investments: Investment[];
 }
 
 const TableComponent: React.FC<TableComponentProps> = ({ investments }) => {
+  const navigate = useNavigate();
+
+  if (!investments || investments.length === 0) {
+    return (
+      <div className="bg-white rounded-2xl p-8 sm:p-12 border border-gray-100 text-center shadow-sm">
+        <div className="w-16 h-16 rounded-full bg-amber-50 text-oha_primary flex items-center justify-center mx-auto mb-4 border border-amber-200/60">
+          <img src={bee} alt="OneHive Bee" className="w-10 h-10 object-contain" />
+        </div>
+        <h3 className="text-base sm:text-lg font-bold text-gray-900">No Active Investments Yet</h3>
+        <p className="text-sm text-gray-500 max-w-md mx-auto mt-1 mb-6">
+          Your funded hives, harvest milestones, interest earnings, and colonization records will be tracked here in real-time once you get started.
+        </p>
+        <button
+          type="button"
+          onClick={() => navigate("/new-investment")}
+          className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-oha_secondary text-white font-semibold text-sm hover:bg-shadsd transition shadow-sm cursor-pointer"
+        >
+          <span>Explore Investment Tiers</span>
+          <ArrowRight className="w-4 h-4" />
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="rounded-md overflow-hidden">
       {/* Desktop/Tablet table */}

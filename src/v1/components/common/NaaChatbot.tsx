@@ -27,7 +27,47 @@ const NaaChatbot: React.FC = () => {
     ]);
     const [isTyping, setIsTyping] = useState(false);
     const [historyLoaded, setHistoryLoaded] = useState(false);
+    const [showNudge, setShowNudge] = useState(true);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    const sendPrompt = async (promptText: string) => {
+        if (isTyping) return;
+        const newUserMessage: UIMessage = {
+            id: Date.now().toString(),
+            text: promptText,
+            sender: "user",
+            timestamp: new Date(),
+        };
+
+        setMessages((prev) => [...prev, newUserMessage]);
+        setIsTyping(true);
+
+        try {
+            const api = ChatbotApi.getInstance();
+            const response = await api.sendMessage(promptText, location.pathname);
+
+            if (response.data) {
+                const botResponse: UIMessage = {
+                    id: response.data.id || (Date.now() + 1).toString(),
+                    text: response.data.content,
+                    sender: "bot",
+                    timestamp: new Date(response.data.timestamp || Date.now()),
+                };
+                setMessages((prev) => [...prev, botResponse]);
+            }
+        } catch (err) {
+            console.error(err);
+            const errorMessage: UIMessage = {
+                id: (Date.now() + 1).toString(),
+                text: "Sorry, I'm having trouble connecting right now. Please try again later.",
+                sender: "system",
+                timestamp: new Date(),
+            };
+            setMessages((prev) => [...prev, errorMessage]);
+        } finally {
+            setIsTyping(false);
+        }
+    };
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -124,26 +164,34 @@ const NaaChatbot: React.FC = () => {
                         {/* Header */}
                         <div className="bg-oha_primary p-4 flex items-center justify-between text-white drop-shadow-sm">
                             <div className="flex items-center gap-3">
-                                <div className="h-10 w-10 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm border border-white/30">
-                                    <span className="text-xl" role="img" aria-label="bee">
-                                        🐝
-                                    </span>
+                                <div className="relative">
+                                    <div className="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center border border-white/30 overflow-hidden">
+                                        <Bot className="h-6 w-6 text-white" />
+                                    </div>
+                                    <span className="absolute bottom-0 right-0 h-2.5 w-2.5 bg-green-400 rounded-full border-2 border-oha_primary"></span>
                                 </div>
                                 <div>
-                                    <h3 className="font-semibold text-lg leading-tight">Naa</h3>
-                                    <p className="text-xs text-white/80 font-medium">Virtual Assistant</p>
+                                    <h3 className="font-semibold text-sm flex items-center gap-2 text-white">
+                                        Naa
+                                        <span className="text-[10px] bg-white/20 text-white px-1.5 py-0.5 rounded-full font-normal">
+                                            Hive AI
+                                        </span>
+                                    </h3>
+                                    <p className="text-xs text-white/80">
+                                        Always here to help you navigate
+                                    </p>
                                 </div>
                             </div>
                             <button
                                 onClick={toggleChat}
-                                className="p-2 hover:bg-white/20 rounded-full transition-colors focus:outline-none"
+                                className="text-white/80 hover:text-white p-1 rounded-full hover:bg-white/10 transition-colors cursor-pointer"
                             >
                                 <X className="h-5 w-5" />
                             </button>
                         </div>
 
                         {/* Messages Area */}
-                        <div className="flex-1 overflow-y-auto p-4 bg-gray-50/50 space-y-4">
+                        <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50/50">
                             {messages.map((msg) => (
                                 <div
                                     key={msg.id}
@@ -189,6 +237,20 @@ const NaaChatbot: React.FC = () => {
                             <div ref={messagesEndRef} />
                         </div>
 
+                        {/* Suggested Quick Question Chips */}
+                        <div className="px-4 py-2 bg-gray-50 border-t border-gray-100 flex items-center gap-1.5 overflow-x-auto">
+                            {["How do payouts work?", "Compare hive types", "Minimum investment"].map((chip) => (
+                                <button
+                                    key={chip}
+                                    type="button"
+                                    onClick={() => sendPrompt(chip)}
+                                    className="text-[11px] px-2.5 py-1 rounded-full bg-white border border-gray-200 text-gray-700 hover:bg-amber-50 hover:border-oha_primary hover:text-oha_primary transition whitespace-nowrap cursor-pointer shadow-xs"
+                                >
+                                    {chip}
+                                </button>
+                            ))}
+                        </div>
+
                         {/* Input Area */}
                         <div className="p-4 bg-white border-t border-gray-100">
                             <form
@@ -205,7 +267,7 @@ const NaaChatbot: React.FC = () => {
                                 <button
                                     type="submit"
                                     disabled={!message.trim()}
-                                    className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-full bg-oha_primary text-white disabled:opacity-50 disabled:bg-gray-300 transition-colors shadow-sm"
+                                    className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-full bg-oha_primary text-white disabled:opacity-50 disabled:bg-gray-300 transition-colors shadow-sm cursor-pointer"
                                 >
                                     <Send className="h-4 w-4" />
                                 </button>
@@ -214,6 +276,50 @@ const NaaChatbot: React.FC = () => {
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            {/* Floating Welcome Speech Bubble for Fresh Investors */}
+            {!isOpen && showNudge && (
+                <motion.div
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    className="fixed bottom-28 right-8 z-50 max-w-xs bg-white rounded-2xl p-4 shadow-xl border border-amber-200/90 text-left"
+                >
+                    <button
+                        type="button"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setShowNudge(false);
+                        }}
+                        className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 p-1 cursor-pointer"
+                        aria-label="Dismiss nudge"
+                    >
+                        <X className="w-3.5 h-3.5" />
+                    </button>
+                    <div className="flex items-start gap-2.5">
+                        <span className="text-xl">👋</span>
+                        <div className="pr-2">
+                            <h5 className="text-xs font-bold text-gray-900">Need Guidance?</h5>
+                            <p className="text-xs text-gray-600 mt-0.5 leading-snug">
+                                Curious how honey yields and payouts work? Click to chat with me!
+                            </p>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setShowNudge(false);
+                                    setIsOpen(true);
+                                }}
+                                className="mt-2 text-xs font-bold text-oha_primary hover:underline cursor-pointer flex items-center gap-1"
+                            >
+                                <span>Ask Naa</span>
+                                <Send className="w-3 h-3" />
+                            </button>
+                        </div>
+                    </div>
+                    {/* Bubble pointer */}
+                    <div className="absolute -bottom-2 right-8 w-4 h-4 bg-white border-r border-b border-amber-200/90 transform rotate-45"></div>
+                </motion.div>
+            )}
 
             {/* FAB */}
             <motion.button

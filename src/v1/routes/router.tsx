@@ -116,11 +116,13 @@ const router = createBrowserRouter([
         path: "notification",
         element: <NotificationLayout />,
         children: [
-          { index: true, element: <Navigate to="category/Investment" replace /> },
-          { path: "category/:key", element: <NotificationsPage /> },
+          { index: true, element: <Navigate to="investment-updates" replace /> },
           { path: "message/:id", element: <NotificationDetailPage /> },
+          { path: "category/:key", element: <NotificationsPage /> },
+          { path: ":key", element: <NotificationsPage /> },
         ],
       },
+      { path: "notifications", element: <Navigate to="/notification" replace /> },
       { path: "feedback", element: <FeedbackPage /> },
       { path: "resources", element: <ResourcesPage /> },
 

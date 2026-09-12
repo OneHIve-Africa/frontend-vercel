@@ -5,6 +5,10 @@ import BeeInvestmentCard from "@/v1/components/common/BeeInvestmentCard";
 import ImpactStatsSecond from "../components/ImpactStatsSecond";
 import CarbonOffsetAndHives from "../components/CarbonOffsetAndHives";
 import CommunityImpactCard from "../components/CommunityImpactCard";
+import CarbonScorecard from "../components/CarbonScorecard";
+import HoneyContributionCard from "../components/HoneyContributionCard";
+import OneHiveTreeInitiative from "../components/OneHiveTreeInitiative";
+import ImpactTimeline from "../components/ImpactTimeline";
 import { useUserProfileStore } from "@/v1/features/auth/store/UserProfileStore";
 import useInvestmentStore from "../../portfolio/store/InvestmentStore";
 
@@ -41,6 +45,9 @@ const ImpactPage = () => {
     };
     fetchMetrics();
   }, []);
+
+  const totalHives =
+    investments?.reduce((acc, inv) => acc + (inv.number_of_hives || 0), 0) || 0;
 
   return (
     <div className="w-full h-full">
@@ -94,9 +101,42 @@ const ImpactPage = () => {
             />
           </div>
         </section>
+
+        {/* Section 4: Carbon Offset Scorecard & Honey Yield Share */}
+        <section className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-stretch w-full pt-10">
+          <div className="lg:col-span-3 h-full">
+            <CarbonScorecard 
+              carbonOffset={metrics?.total_carbon_offset_kg ?? 0}
+              loading={loading}
+            />
+          </div>
+          <div className="lg:col-span-2 h-full">
+            <HoneyContributionCard 
+              investorHoneyTons={metrics?.investor_honey_produced_tons ?? 0}
+              totalHoneyTons={metrics?.total_honey_produced_tons ?? 0}
+              loading={loading}
+            />
+          </div>
+        </section>
+
+        {/* Section 5: 1-Hive-1-Tree Initiative Banner */}
+        <section className="w-full pt-10">
+          <OneHiveTreeInitiative 
+            totalHives={totalHives}
+            loading={loading}
+          />
+        </section>
+
+        {/* Section 6: Impact & Harvest Journey Timeline */}
+        <section className="w-full pt-10 pb-12">
+          <ImpactTimeline 
+            investments={investments} 
+          />
+        </section>
       </div>
     </div>
   );
 };
 
 export default ImpactPage;
+

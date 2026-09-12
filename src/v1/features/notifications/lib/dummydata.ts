@@ -1,34 +1,41 @@
-import {Notification} from "@/v1/features/notifications/lib/types.ts";
+import { Notification } from "@/v1/features/notifications/lib/types.ts";
 
 const sampleNotifications: Notification[] = [
   {
     id: "1",
-    group: "Investment",
-    title: "Investment Update",
-    message: "Hello Kwame, we have update for you on Hive 1920",
-    timestamp: "8:38 AM",
+    group: "Investment Updates",
+    title: "Apiary Colonization Milestone",
+    message: "Your hives in the Hohoe Apiary cluster have reached 92% colonization with thriving African honeybee colonies.",
+    timestamp: new Date(Date.now() - 3600000).toISOString(),
+    read: false,
+    route: "/portfolio",
   },
   {
     id: "2",
-    group: "Performance",
-    title: "Performance Review",
-    message: "Your portfolio has gained 5% this week.",
-    timestamp: "8:00 AM",
+    group: "Performance Alerts",
+    title: "Quarterly Honey Yield Projection",
+    message: "Nectar flow models for the upcoming season project a 15% increase in total raw honey extraction.",
+    timestamp: new Date(Date.now() - 7200000).toISOString(),
+    read: false,
+    route: "/financial-performance",
   },
   {
     id: "3",
-    group: "Spam",
-    title: "Suspicious Activity",
-    message: "We noticed unusual activity on your account.",
-    timestamp: "7:45 AM",
+    group: "Announcements",
+    title: "Annual Volta Apiary Field Day",
+    message: "Join our farm managers and local beekeepers on October 14 for an on-site apiary inspection and honey tasting.",
+    timestamp: new Date(Date.now() - 86400000).toISOString(),
+    read: true,
   },
   {
     id: "4",
-    group: "Investment",
-    title: "Investment Alert",
-    message: "New investment opportunity in renewable energy.",
-    timestamp: "7:30 AM",
+    group: "Investment Updates",
+    title: "New High-Yield Apiary Site Open",
+    message: "A new cooperative site in the Eastern Region has opened for hive allocation with guaranteed off-take.",
+    timestamp: new Date(Date.now() - 172800000).toISOString(),
+    read: true,
+    route: "/new-investment",
   },
 ];
 
-export {sampleNotifications}
+export { sampleNotifications };

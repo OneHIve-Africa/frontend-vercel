@@ -1,5 +1,10 @@
 import { create } from "zustand";
-import { Notification, NotificationStore, AllowedInboxTag } from "@/v1/features/notifications/lib/types.ts";
+import {
+  Notification,
+  NotificationStore,
+  AllowedInboxTag,
+  normalizeNotificationKey,
+} from "@/v1/features/notifications/lib/types.ts";
 import { sampleNotifications } from "@/v1/features/notifications/lib/dummydata.ts";
 import NotificationsApi, { InboxMessage } from "@/v1/api/NotificationsApi";
 
@@ -18,29 +23,36 @@ const loadLocal = (): Notification[] => {
 const computeUnread = (list: Notification[]) =>
   list.reduce((acc, n) => acc + (n.read ? 0 : 1), 0);
 
-export const useNotificationStore = create<NotificationStore & {
-  isLoading: boolean;
-  error?: string | null;
-  fetchInbox: (tag?: AllowedInboxTag) => Promise<void>;
-  fetchInboxAll: () => Promise<void>;
-}>((set, get) => ({
+export const useNotificationStore = create<
+  NotificationStore & {
+    isLoading: boolean;
+    error?: string | null;
+    fetchInbox: (tag?: AllowedInboxTag) => Promise<void>;
+    fetchInboxAll: () => Promise<void>;
+  }
+>((set, get) => ({
   notifications: loadLocal(),
   filteredNotifications: [],
-  activeTab: "Investment",
+  activeTab: "investment-updates",
   unreadCount: computeUnread(loadLocal()),
   isLoading: false,
   error: null,
+
   // legacy local loader (kept for fallback/dev)
   fetchNotifications: () => {
     setTimeout(() => {
-      set((state) => ({
-        notifications: sampleNotifications,
-        filteredNotifications: sampleNotifications.filter(
-          (notif) => notif.group === state.activeTab
-        ),
-      }));
+      set((state) => {
+        const { tag } = normalizeNotificationKey(state.activeTab);
+        return {
+          notifications: sampleNotifications,
+          filteredNotifications: sampleNotifications.filter(
+            (notif) => notif.group === tag
+          ),
+        };
+      });
     }, 600);
   },
+
   // New API-powered inbox loader (optionally by tag)
   fetchInbox: async (tag?: AllowedInboxTag) => {
     set({ isLoading: true, error: null });
@@ -59,7 +71,9 @@ export const useNotificationStore = create<NotificationStore & {
       ];
       const normalized: Notification[] = data.map((m: InboxMessage) => {
         const rawTag = (m.tag ?? "").toString();
-        const group: AllowedInboxTag = (allowedInboxTags as readonly string[]).includes(rawTag)
+        const group: AllowedInboxTag = (
+          allowedInboxTags as readonly string[]
+        ).includes(rawTag)
           ? (rawTag as AllowedInboxTag)
           : "Announcements";
         return {
@@ -72,18 +86,11 @@ export const useNotificationStore = create<NotificationStore & {
           route: m.cta_link || undefined,
         };
       });
+
       // Replace local cache with latest from API
       set((state) => {
-        const merged = normalized; // simple replace; could merge if needed
-        const keyToTag: Record<string, AllowedInboxTag> = {
-          Investment: "Investment Updates",
-          Performance: "Performance Alerts",
-          Draft: "Events",
-          Spam: "Announcements",
-          DMS: "Direct Messages",
-          Important: "Important",
-        };
-        const desired = keyToTag[state.activeTab] ?? (state.activeTab as AllowedInboxTag);
+        const merged = normalized.length > 0 ? normalized : state.notifications;
+        const { tag: desired } = normalizeNotificationKey(state.activeTab);
         const filtered = merged.filter((n) => n.group === desired);
         const nextUnread = computeUnread(merged);
         try {
@@ -103,40 +110,29 @@ export const useNotificationStore = create<NotificationStore & {
       set({ error: message, isLoading: false });
     }
   },
+
   // Load entire inbox (no tag) so counts across tabs remain accurate
   fetchInboxAll: async () => {
     const { fetchInbox } = get();
     await fetchInbox(undefined);
   },
+
   setActiveTab: (tab) =>
     set((state) => {
-      const keyToTag: Record<string, AllowedInboxTag> = {
-        Investment: "Investment Updates",
-        Performance: "Performance Alerts",
-        Draft: "Events",
-        Spam: "Announcements",
-        DMS: "Direct Messages",
-        Important: "Important",
-      };
-      const desired = keyToTag[tab] ?? (tab as unknown as AllowedInboxTag);
+      const { tabKey, tag: desired } = normalizeNotificationKey(tab);
       return {
-        activeTab: tab,
-        filteredNotifications: state.notifications.filter((notif) => notif.group === desired),
+        activeTab: tabKey,
+        filteredNotifications: state.notifications.filter(
+          (notif) => notif.group === desired
+        ),
       };
     }),
+
   addNotification: (notif: Notification) =>
     set((state) => {
       const enriched: Notification = { read: false, ...notif };
       const next = [enriched, ...state.notifications];
-      const keyToTag: Record<string, AllowedInboxTag> = {
-        Investment: "Investment Updates",
-        Performance: "Performance Alerts",
-        Draft: "Events",
-        Spam: "Announcements",
-        DMS: "Direct Messages",
-        Important: "Important",
-      };
-      const desired = keyToTag[state.activeTab] ?? (state.activeTab as AllowedInboxTag);
+      const { tag: desired } = normalizeNotificationKey(state.activeTab);
       const filtered = next.filter((n) => n.group === desired);
       const nextUnread = computeUnread(next);
       try {
@@ -150,28 +146,31 @@ export const useNotificationStore = create<NotificationStore & {
         unreadCount: nextUnread,
       } as Partial<NotificationStore>;
     }),
+
   markAllRead: async () => {
     const state = get();
-    const ids = state.notifications.filter((n) => !n.read && !n.actionRequired).map((n) => n.id);
+    const ids = state.notifications
+      .filter((n) => !n.read && !n.actionRequired)
+      .map((n) => n.id);
     if (ids.length === 0) return;
     // optimistic update
     set((s) => {
-      const next = s.notifications.map((n) => (ids.includes(n.id) ? { ...n, read: true } : n));
-      const keyToTag: Record<string, AllowedInboxTag> = {
-        Investment: "Investment Updates",
-        Performance: "Performance Alerts",
-        Draft: "Events",
-        Spam: "Announcements",
-        DMS: "Direct Messages",
-        Important: "Important",
-      };
-      const desired = keyToTag[s.activeTab] ?? (s.activeTab as AllowedInboxTag);
+      const next = s.notifications.map((n) =>
+        ids.includes(n.id) ? { ...n, read: true } : n
+      );
+      const { tag: desired } = normalizeNotificationKey(s.activeTab);
       const filtered = next.filter((n) => n.group === desired);
       const nextUnread = computeUnread(next);
-      try { localStorage.setItem(LOCAL_KEY, JSON.stringify(next)); } catch {
+      try {
+        localStorage.setItem(LOCAL_KEY, JSON.stringify(next));
+      } catch {
         // ignore localStorage issues
       }
-      return { notifications: next, filteredNotifications: filtered, unreadCount: nextUnread } as Partial<NotificationStore>;
+      return {
+        notifications: next,
+        filteredNotifications: filtered,
+        unreadCount: nextUnread,
+      } as Partial<NotificationStore>;
     });
     try {
       const api = NotificationsApi.getInstance();
@@ -182,29 +181,31 @@ export const useNotificationStore = create<NotificationStore & {
       fetchInboxAll().catch(() => {});
     }
   },
-  setNotificationRead: (id: string) =>
-    {
-      // optimistic update then sync
-      const s = get();
-      const next = s.notifications.map((n) => (n.id === id ? { ...n, read: true } : n));
-      const keyToTag: Record<string, AllowedInboxTag> = {
-        Investment: "Investment Updates",
-        Performance: "Performance Alerts",
-        Draft: "Events",
-        Spam: "Announcements",
-        DMS: "Direct Messages",
-        Important: "Important",
-      };
-      const desired = keyToTag[s.activeTab] ?? (s.activeTab as AllowedInboxTag);
-      const filtered = next.filter((n) => n.group === desired);
-      const nextUnread = computeUnread(next);
-      try { localStorage.setItem(LOCAL_KEY, JSON.stringify(next)); } catch {
-        // ignore localStorage issues
-      }
-      set({ notifications: next, filteredNotifications: filtered, unreadCount: nextUnread } as Partial<NotificationStore>);
-      NotificationsApi.getInstance().markRead(id).catch(() => {
+
+  setNotificationRead: (id: string) => {
+    // optimistic update then sync
+    const s = get();
+    const next = s.notifications.map((n) =>
+      n.id === id ? { ...n, read: true } : n
+    );
+    const { tag: desired } = normalizeNotificationKey(s.activeTab);
+    const filtered = next.filter((n) => n.group === desired);
+    const nextUnread = computeUnread(next);
+    try {
+      localStorage.setItem(LOCAL_KEY, JSON.stringify(next));
+    } catch {
+      // ignore localStorage issues
+    }
+    set({
+      notifications: next,
+      filteredNotifications: filtered,
+      unreadCount: nextUnread,
+    } as Partial<NotificationStore>);
+    NotificationsApi.getInstance()
+      .markRead(id)
+      .catch(() => {
         // Best-effort: refresh from server
         get().fetchInboxAll().catch(() => {});
       });
-    },
+  },
 }));

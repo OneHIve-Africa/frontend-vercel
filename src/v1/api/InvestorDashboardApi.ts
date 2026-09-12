@@ -5,6 +5,7 @@ import { ApiResponse } from "./types";
 export interface HiveBreakdown {
   ktbh: number;
   langstroth: number;
+  saltpond?: number; // Saltpond log-hive type
   total: number;
 }
 

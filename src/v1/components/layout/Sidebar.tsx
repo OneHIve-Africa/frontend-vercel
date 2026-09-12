@@ -120,10 +120,10 @@ const Sidebar: React.FC = () => {
 
       {/* Sidebar aside */}
       <aside
-        className={`fixed top-16 left-0 z-40 h-[calc(100vh-4rem)] bg-white border-r border-gray-100 transition-all duration-300 ease-in-out flex flex-col py-6 overflow-hidden ${isOpen ? "w-64 max-w-[80vw]" : "w-0 md:w-20 -translate-x-full md:translate-x-0"
+        className={`fixed top-16 left-0 z-40 h-[calc(100vh-4rem)] bg-white border-r border-gray-100 transition-all duration-300 ease-in-out flex flex-col py-6 overflow-visible ${isOpen ? "w-64 max-w-[80vw]" : "w-0 md:w-20 -translate-x-full md:translate-x-0"
           }`}
       >
-        <div className="flex-1 overflow-y-auto w-full no-scrollbar">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden w-full no-scrollbar">
           <ul className="flex flex-col w-full gap-0.5">
             {profile?.position == "Administrator" ? (
               <>{renderNavItems([...adminSidebarData, ...settingsside])}</>
@@ -154,8 +154,8 @@ const Sidebar: React.FC = () => {
         {/* Floating toggle button on the border */}
         <button
           onClick={toggleSidebar}
-          className={`absolute top-6 -right-3 z-50 flex h-6 w-6 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 shadow-sm hover:text-gray-900 focus:outline-none transition-transform duration-300 ${isOpen ? "rotate-180" : "rotate-0"
-            }`}
+          className={`absolute top-6 -right-3 z-50 h-6 w-6 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 shadow-sm hover:text-gray-900 hover:bg-gray-50 focus:outline-none transition-transform duration-300 cursor-pointer ${!isOpen ? "hidden md:flex" : "flex"
+            } ${isOpen ? "rotate-180" : "rotate-0"}`}
           aria-label="Toggle Sidebar"
         >
           <ChevronRight className="h-4 w-4" />

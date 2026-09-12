@@ -20,6 +20,9 @@ import ResourcesApi, { type ResourceItem } from "@/v1/api/ResourcesApi";
 import ResourcePreviewModal from "@/v1/features/resources/components/ResourcePreviewModal";
 import { dateUtils } from "@/v1/utils/dateutils";
 import { useUserProfileStore } from "@/v1/features/auth/store/UserProfileStore";
+import { abso } from "@/assets";
+import HoneycombPattern from "@/v1/components/common/HoneycombPattern";
+
 
 const ResourcesPage: React.FC = () => {
   const STORAGE_KEY = "resources_page_prefs";
@@ -215,9 +218,22 @@ const ResourcesPage: React.FC = () => {
   }, [filtered]);
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
+    <div className="min-h-screen bg-gray-50 p-6 sm:p-8">
       <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 mb-6 gap-4 border-b border-gray-200/80">
+          <div>
+            <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight">
+              Investor Resources & Library
+            </h1>
+            <p className="text-sm text-gray-600 mt-1">
+              Official harvest certificates, apiary deeds, inspection sheets, and media documentation.
+            </p>
+          </div>
+        </div>
+
         <div className="flex justify-end items-center mb-6 gap-3 flex-wrap">
+
           <div className="relative w-full max-w-sm flex-1 min-w-[240px]">
             <input
               type="text"
@@ -413,11 +429,35 @@ const ResourcesPage: React.FC = () => {
                   </tr>
                 ) : filtered.length === 0 ? (
                   <tr>
-                    <td
-                      colSpan={4}
-                      className="p-6 text-center text-sm text-gray-500"
-                    >
-                      No resources found.
+                    <td colSpan={5} className="p-0">
+                      <div className="relative overflow-hidden py-16 px-6 flex flex-col items-center justify-center text-center">
+                        <div
+                          className="absolute inset-0 opacity-[0.03] bg-cover bg-no-repeat bg-center pointer-events-none"
+                          style={{ backgroundImage: `url(${abso})` }}
+                        />
+                        <HoneycombPattern opacity={0.03} color="#266B3F" />
+                        <div className="relative z-10 max-w-sm flex flex-col items-center">
+                          <div className="w-12 h-12 rounded-2xl bg-gray-100 text-gray-400 flex items-center justify-center mb-3">
+                            <FileText size={24} />
+                          </div>
+                          <h4 className="text-sm font-bold text-gray-900 mb-1">
+                            {q ? `No results for "${q}"` : "No Resources Available"}
+                          </h4>
+                          <p className="text-xs text-gray-500 leading-relaxed mb-4">
+                            {q
+                              ? "Try adjusting your search terms or clearing your current filter."
+                              : "Audit certificates and apiary recordings will appear here once published."}
+                          </p>
+                          {q && (
+                            <button
+                              onClick={() => setQ("")}
+                              className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 transition"
+                            >
+                              Clear Search
+                            </button>
+                          )}
+                        </div>
+                      </div>
                     </td>
                   </tr>
                 ) : (
@@ -503,8 +543,33 @@ const ResourcesPage: React.FC = () => {
                 </div>
               </div>
             ) : filtered.length === 0 ? (
-              <div className="col-span-full text-center text-sm text-gray-500">
-                No resources found.
+              <div className="col-span-full relative overflow-hidden bg-white rounded-2xl border border-gray-100 shadow-sm py-16 px-6 flex flex-col items-center justify-center text-center">
+                <div
+                  className="absolute inset-0 opacity-[0.03] bg-cover bg-no-repeat bg-center pointer-events-none"
+                  style={{ backgroundImage: `url(${abso})` }}
+                />
+                <HoneycombPattern opacity={0.03} color="#266B3F" />
+                <div className="relative z-10 max-w-sm flex flex-col items-center">
+                  <div className="w-12 h-12 rounded-2xl bg-gray-100 text-gray-400 flex items-center justify-center mb-3">
+                    <FileText size={24} />
+                  </div>
+                  <h4 className="text-sm font-bold text-gray-900 mb-1">
+                    {q ? `No results for "${q}"` : "No Resources Available"}
+                  </h4>
+                  <p className="text-xs text-gray-500 leading-relaxed mb-4">
+                    {q
+                      ? "Try adjusting your search terms or clearing your current filter."
+                      : "Audit certificates and apiary recordings will appear here once published."}
+                  </p>
+                  {q && (
+                    <button
+                      onClick={() => setQ("")}
+                      className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 transition cursor-pointer"
+                    >
+                      Clear Search
+                    </button>
+                  )}
+                </div>
               </div>
             ) : (
               filtered.map((r) => {

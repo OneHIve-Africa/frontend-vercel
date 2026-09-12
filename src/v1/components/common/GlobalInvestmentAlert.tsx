@@ -29,7 +29,10 @@ const GlobalInvestmentAlert: React.FC = () => {
 
   const hasActionRequiredInvestment = useMemo(() => {
     return notifications.some(
-      (n: Notification) => n.group === "Investment" && n.actionRequired && !n.read
+      (n: Notification) =>
+        (n.group === "Investment Updates" || n.group === "Investment") &&
+        n.actionRequired &&
+        !n.read
     );
   }, [notifications]);
 
@@ -113,12 +116,15 @@ const GlobalInvestmentAlert: React.FC = () => {
                 setVisible(false);
                 try {
                   const exists = notifications.some(
-                    (n: Notification) => n.group === "Investment" && n.actionRequired && !n.read
+                    (n: Notification) =>
+                      (n.group === "Investment Updates" || n.group === "Investment") &&
+                      n.actionRequired &&
+                      !n.read
                   );
                   if (!exists) {
                     addNotification({
                       id: `local-${Date.now()}`,
-                      group: "Investment",
+                      group: "Investment Updates",
                       title: "Investment reminder dismissed",
                       message: "You dismissed the in-progress investment reminder.",
                       timestamp: new Date().toISOString(),
