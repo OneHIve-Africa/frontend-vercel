@@ -2,7 +2,8 @@ import React, { useState, useRef, useEffect } from "react";
 import { X, Send, Bot } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "react-router-dom";
-import { mascot_video } from "@/assets";
+import { Lottie } from "lottie-react";
+import { beeLottie } from "@/assets";
 import ChatbotApi from "@/v1/api/ChatbotApi";
 
 // Convert API message to UI message
@@ -165,8 +166,13 @@ const NaaChatbot: React.FC = () => {
                         <div className="bg-oha_primary p-4 flex items-center justify-between text-white drop-shadow-sm">
                             <div className="flex items-center gap-3">
                                 <div className="relative">
-                                    <div className="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center border border-white/30 overflow-hidden">
-                                        <Bot className="h-6 w-6 text-white" />
+                                    <div className="h-10 w-10 rounded-full bg-white flex items-center justify-center border border-white/30 overflow-hidden shadow-sm">
+                                        <Lottie
+                                            src={beeLottie}
+                                            loop={true}
+                                            autoplay={true}
+                                            className="w-10 h-10 pointer-events-none scale-125"
+                                        />
                                     </div>
                                     <span className="absolute bottom-0 right-0 h-2.5 w-2.5 bg-green-400 rounded-full border-2 border-oha_primary"></span>
                                 </div>
@@ -326,21 +332,21 @@ const NaaChatbot: React.FC = () => {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={toggleChat}
-                className={`fixed bottom-6 right-10 h-20 w-20 rounded-full flex items-center justify-center z-50 transition-colors cursor-pointer overflow-hidden ${isOpen ? "bg-gray-800 hover:bg-gray-700 shadow-xl" : "bg-white"
+                className={`fixed bottom-6 right-10 h-20 w-20 rounded-full flex items-center justify-center z-50 transition-all cursor-pointer overflow-hidden shadow-xl ${isOpen ? "bg-gray-800 hover:bg-gray-700" : "bg-white hover:shadow-2xl border border-amber-100/80"
                     }`}
                 aria-label="Toggle Chatbot"
             >
                 {isOpen ? (
                     <X className="h-6 w-6 text-white" />
                 ) : (
-                    <video
-                        src={mascot_video}
-                        autoPlay
-                        loop
-                        muted
-                        playsInline
-                        className="h-24 w-20 object-cover bg-white object-center rounded-full pointer-events-none"
-                    />
+                    <div className="w-full h-full flex items-center justify-center pointer-events-none p-1">
+                        <Lottie
+                            src={beeLottie}
+                            loop={true}
+                            autoplay={true}
+                            className="w-full h-full pointer-events-none scale-125"
+                        />
+                    </div>
                 )}
             </motion.button>
         </>

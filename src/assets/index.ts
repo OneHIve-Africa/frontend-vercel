@@ -22,6 +22,7 @@ import logomain from "./images/onehive.png";
 import success from "./images/success.png";
 import mascot from "./images/mascot.png";
 import mascot_video from "./images/macot.mp4";
+import beeLottie from "./bee-lottie.json";
 
 export {
   woman_login,
@@ -47,5 +48,6 @@ export {
   logomain,
   success,
   mascot,
-  mascot_video
+  mascot_video,
+  beeLottie
 };
