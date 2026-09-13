@@ -1,10 +1,12 @@
 import React, { useState, useRef, useEffect } from "react";
-import { X, Send, Bot } from "lucide-react";
+import { X, Send, Bot, MessageCircle, MessageCircleOff } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "react-router-dom";
 import { Lottie } from "lottie-react";
 import { beeLottie } from "@/assets";
 import ChatbotApi from "@/v1/api/ChatbotApi";
+
+const PROMPT_STORAGE_KEY = "oha_naa_show_prompt";
 
 // Convert API message to UI message
 interface UIMessage {
@@ -28,8 +30,24 @@ const NaaChatbot: React.FC = () => {
     ]);
     const [isTyping, setIsTyping] = useState(false);
     const [historyLoaded, setHistoryLoaded] = useState(false);
-    const [showNudge, setShowNudge] = useState(true);
+    const [showNudge, setShowNudge] = useState<boolean>(() => {
+        try {
+            const saved = localStorage.getItem(PROMPT_STORAGE_KEY);
+            return saved !== null ? saved === "true" : true;
+        } catch {
+            return true;
+        }
+    });
     const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    const setPromptVisibility = (visible: boolean) => {
+        setShowNudge(visible);
+        try {
+            localStorage.setItem(PROMPT_STORAGE_KEY, visible ? "true" : "false");
+        } catch (err) {
+            console.error("Failed to save chatbot prompt preference:", err);
+        }
+    };
 
     const sendPrompt = async (promptText: string) => {
         if (isTyping) return;
@@ -188,12 +206,28 @@ const NaaChatbot: React.FC = () => {
                                     </p>
                                 </div>
                             </div>
-                            <button
-                                onClick={toggleChat}
-                                className="text-white/80 hover:text-white p-1 rounded-full hover:bg-white/10 transition-colors cursor-pointer"
-                            >
-                                <X className="h-5 w-5" />
-                            </button>
+                            <div className="flex items-center gap-1">
+                                <button
+                                    type="button"
+                                    onClick={() => setPromptVisibility(!showNudge)}
+                                    className="text-white/80 hover:text-white p-1.5 rounded-full hover:bg-white/15 transition-colors cursor-pointer"
+                                    title={showNudge ? "Hide message prompt on screen" : "Show message prompt on screen"}
+                                    aria-label="Toggle mascot prompt bubble"
+                                >
+                                    {showNudge ? (
+                                        <MessageCircle className="h-4 w-4" />
+                                    ) : (
+                                        <MessageCircleOff className="h-4 w-4 text-white/50" />
+                                    )}
+                                </button>
+                                <button
+                                    onClick={toggleChat}
+                                    className="text-white/80 hover:text-white p-1 rounded-full hover:bg-white/10 transition-colors cursor-pointer"
+                                    aria-label="Close Chat"
+                                >
+                                    <X className="h-5 w-5" />
+                                </button>
+                            </div>
                         </div>
 
                         {/* Messages Area */}
@@ -295,10 +329,11 @@ const NaaChatbot: React.FC = () => {
                         type="button"
                         onClick={(e) => {
                             e.stopPropagation();
-                            setShowNudge(false);
+                            setPromptVisibility(false);
                         }}
                         className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 p-1 cursor-pointer"
-                        aria-label="Dismiss nudge"
+                        title="Dismiss prompt (keep closed)"
+                        aria-label="Dismiss prompt"
                     >
                         <X className="w-3.5 h-3.5" />
                     </button>
@@ -312,7 +347,6 @@ const NaaChatbot: React.FC = () => {
                             <button
                                 type="button"
                                 onClick={() => {
-                                    setShowNudge(false);
                                     setIsOpen(true);
                                 }}
                                 className="mt-2 text-xs font-bold text-oha_primary hover:underline cursor-pointer flex items-center gap-1"
@@ -325,6 +359,27 @@ const NaaChatbot: React.FC = () => {
                     {/* Bubble pointer */}
                     <div className="absolute -bottom-2 right-8 w-4 h-4 bg-white border-r border-b border-amber-200/90 transform rotate-45"></div>
                 </motion.div>
+            )}
+
+            {/* Subtle Re-open Prompt Pill when kept closed */}
+            {!isOpen && !showNudge && (
+                <motion.button
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        setPromptVisibility(true);
+                    }}
+                    className="fixed bottom-28 right-8 z-50 bg-white/95 hover:bg-white text-gray-700 hover:text-oha_primary text-xs font-medium px-3 py-1.5 rounded-full shadow-lg border border-amber-200/90 flex items-center gap-1.5 transition-all backdrop-blur-sm cursor-pointer group"
+                    title="Click to show Naa's guidance prompt"
+                    aria-label="Show guidance prompt"
+                >
+                    <span className="text-sm">👋</span>
+                    <span className="group-hover:text-oha_primary">Need guidance?</span>
+                </motion.button>
             )}
 
             {/* Mascot FAB */}
