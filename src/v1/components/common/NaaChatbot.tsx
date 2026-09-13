@@ -8,6 +8,44 @@ import ChatbotApi from "@/v1/api/ChatbotApi";
 
 const PROMPT_STORAGE_KEY = "oha_naa_show_prompt";
 
+const parseInlineBold = (text: string) => {
+    const parts = text.split(/(\*\*.*?\*\*)/g);
+    return parts.map((part, i) => {
+        if (part.startsWith("**") && part.endsWith("**")) {
+            return (
+                <strong key={i} className="font-semibold text-stone-900">
+                    {part.slice(2, -2)}
+                </strong>
+            );
+        }
+        return part;
+    });
+};
+
+const renderFormattedMessage = (text: string) => {
+    const lines = text.split("\n");
+    return lines.map((line, idx) => {
+        const trimmed = line.trim();
+        if (trimmed.startsWith("* ") || trimmed.startsWith("- ") || trimmed.startsWith("• ")) {
+            const bulletContent = trimmed.slice(2);
+            return (
+                <div key={idx} className="flex items-start gap-1.5 my-0.5">
+                    <span className="text-amber-500 font-bold text-xs mt-0.5">•</span>
+                    <span>{parseInlineBold(bulletContent)}</span>
+                </div>
+            );
+        }
+        if (!trimmed) {
+            return <div key={idx} className="h-1" />;
+        }
+        return (
+            <p key={idx} className={idx > 0 ? "mt-1" : ""}>
+                {parseInlineBold(line)}
+            </p>
+        );
+    });
+};
+
 // Convert API message to UI message
 interface UIMessage {
     id: string;
@@ -30,6 +68,7 @@ const NaaChatbot: React.FC = () => {
     ]);
     const [isTyping, setIsTyping] = useState(false);
     const [historyLoaded, setHistoryLoaded] = useState(false);
+    const [isFluttering, setIsFluttering] = useState(false);
     const [showNudge, setShowNudge] = useState<boolean>(() => {
         try {
             const saved = localStorage.getItem(PROMPT_STORAGE_KEY);
@@ -39,6 +78,11 @@ const NaaChatbot: React.FC = () => {
         }
     });
     const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    const triggerFlutter = () => {
+        setIsFluttering(true);
+        setTimeout(() => setIsFluttering(false), 1400);
+    };
 
     const setPromptVisibility = (visible: boolean) => {
         setShowNudge(visible);
@@ -60,6 +104,7 @@ const NaaChatbot: React.FC = () => {
 
         setMessages((prev) => [...prev, newUserMessage]);
         setIsTyping(true);
+        triggerFlutter();
 
         try {
             const api = ChatbotApi.getInstance();
@@ -73,6 +118,7 @@ const NaaChatbot: React.FC = () => {
                     timestamp: new Date(response.data.timestamp || Date.now()),
                 };
                 setMessages((prev) => [...prev, botResponse]);
+                triggerFlutter();
             }
         } catch (err) {
             console.error(err);
@@ -252,7 +298,13 @@ const NaaChatbot: React.FC = () => {
                                                 </span>
                                             </div>
                                         )}
-                                        <p>{msg.text}</p>
+                                        <div className="text-sm leading-relaxed">
+                                            {msg.sender === "bot" ? (
+                                                renderFormattedMessage(msg.text)
+                                            ) : (
+                                                <p>{msg.text}</p>
+                                            )}
+                                        </div>
                                         <div
                                             className={`text-[10px] mt-1 ${msg.sender === "user" ? "text-white/70 text-right" : "text-gray-400"
                                                 }`}
@@ -278,15 +330,22 @@ const NaaChatbot: React.FC = () => {
                         </div>
 
                         {/* Suggested Quick Question Chips */}
-                        <div className="px-4 py-2 bg-gray-50 border-t border-gray-100 flex items-center gap-1.5 overflow-x-auto">
-                            {["How do payouts work?", "Compare hive types", "Minimum investment"].map((chip) => (
+                        <div className="px-3 py-2 bg-stone-50/90 border-t border-gray-100 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+                            {[
+                                { label: "Next harvest", icon: "🍯", query: "When is the next honey harvest date?" },
+                                { label: "Yields & ROI", icon: "📈", query: "What are the expected honey yields and returns per hive?" },
+                                { label: "Hive telemetry", icon: "🐝", query: "How does OneHive monitor hive temperature and colony health?" },
+                                { label: "How payouts work", icon: "💳", query: "How are honey returns distributed to investors?" },
+                                { label: "Insurance", icon: "🛡️", query: "What insurance protects my bee colonies?" },
+                            ].map((chip) => (
                                 <button
-                                    key={chip}
+                                    key={chip.label}
                                     type="button"
-                                    onClick={() => sendPrompt(chip)}
-                                    className="text-[11px] px-2.5 py-1 rounded-full bg-white border border-gray-200 text-gray-700 hover:bg-amber-50 hover:border-oha_primary hover:text-oha_primary transition whitespace-nowrap cursor-pointer shadow-xs"
+                                    onClick={() => sendPrompt(chip.query)}
+                                    className="text-[11px] font-medium px-2.5 py-1 rounded-full bg-white border border-stone-200 text-stone-700 hover:bg-amber-50 hover:border-amber-400 hover:text-amber-800 transition-all whitespace-nowrap cursor-pointer shadow-xs flex items-center gap-1 shrink-0"
                                 >
-                                    {chip}
+                                    <span>{chip.icon}</span>
+                                    <span>{chip.label}</span>
                                 </button>
                             ))}
                         </div>
@@ -386,6 +445,8 @@ const NaaChatbot: React.FC = () => {
             <motion.button
                 whileHover={{ scale: 1.1, y: -4 }}
                 whileTap={{ scale: 0.95 }}
+                animate={isFluttering ? { y: [0, -14, 2, -7, 0], rotate: [0, -6, 6, -3, 0] } : { y: 0, rotate: 0 }}
+                transition={{ duration: 1.2, ease: "easeInOut" }}
                 onClick={toggleChat}
                 className={`fixed z-50 flex items-center justify-center cursor-pointer transition-all focus:outline-none ${isOpen
                     ? "bottom-6 right-8 h-12 w-12 rounded-full bg-gray-900/90 hover:bg-gray-900 text-white shadow-2xl backdrop-blur-sm"

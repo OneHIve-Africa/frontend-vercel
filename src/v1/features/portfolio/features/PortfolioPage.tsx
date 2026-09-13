@@ -3,17 +3,25 @@ import useInvestmentStore from "../store/InvestmentStore";
 import InvestorDashboardApi, { DashboardStats } from "@/v1/api/InvestorDashboardApi";
 import { InvestorLaunchpad } from "../components/InvestorLaunchpad";
 import { DashboardBento } from "../components/DashboardBento";
-import { Sparkles, LayoutDashboard, PlusCircle } from "lucide-react";
+import { HiveTelemetryModal } from "../components/HiveTelemetryModal";
+import { exportToCSV, printStatement } from "../utils/statementExport";
+import { useUserProfileStore } from "@/v1/features/auth/store/UserProfileStore";
+import { Sparkles, LayoutDashboard, PlusCircle, Download, FileText, FileSpreadsheet } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Investment } from "@/v1/api/types";
 
 const PortfolioPage = () => {
   const navigate = useNavigate();
+  const { profile } = useUserProfileStore();
   const { investments, isLoading, error, fetchInvestments } = useInvestmentStore();
 
   const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
   const [statsError, setStatsError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"portfolio" | "launchpad">("portfolio");
+  const [showExportMenu, setShowExportMenu] = useState(false);
+  const [isTelemetryOpen, setIsTelemetryOpen] = useState(false);
+  const [selectedHive, setSelectedHive] = useState<Investment | null>(null);
 
   useEffect(() => {
     fetchInvestments();
@@ -84,6 +92,72 @@ const PortfolioPage = () => {
             </div>
           )}
 
+          {hasInvestments && (
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setShowExportMenu((v) => !v)}
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white border border-stone-200 text-stone-700 text-xs sm:text-sm font-semibold hover:bg-stone-50 transition shadow-xs cursor-pointer"
+                title="Download or Print Portfolio Statement"
+              >
+                <Download className="w-3.5 h-3.5 text-stone-500" />
+                <span>Statement</span>
+              </button>
+
+              {showExportMenu && (
+                <div
+                  className="absolute right-0 top-full mt-1.5 w-52 bg-white rounded-xl shadow-xl border border-stone-200 p-1.5 z-30"
+                  onClick={() => setShowExportMenu(false)}
+                >
+                  <button
+                    type="button"
+                    onClick={() =>
+                      exportToCSV(
+                        investments,
+                        dashboardStats,
+                        profile
+                          ? {
+                              user: {
+                                first_name: profile.first_name,
+                                last_name: profile.last_name,
+                                email: profile.email,
+                              },
+                            }
+                          : undefined
+                      )
+                    }
+                    className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-stone-700 hover:bg-amber-50 hover:text-amber-900 rounded-lg transition text-left cursor-pointer"
+                  >
+                    <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+                    <span>Download CSV</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      printStatement(
+                        investments,
+                        dashboardStats,
+                        profile
+                          ? {
+                              user: {
+                                first_name: profile.first_name,
+                                last_name: profile.last_name,
+                                email: profile.email,
+                              },
+                            }
+                          : undefined
+                      )
+                    }
+                    className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-stone-700 hover:bg-amber-50 hover:text-amber-900 rounded-lg transition text-left cursor-pointer"
+                  >
+                    <FileText className="w-4 h-4 text-amber-600" />
+                    <span>Printable / PDF Statement</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
           <button
             type="button"
             onClick={() => navigate("/new-investment")}
@@ -119,6 +193,10 @@ const PortfolioPage = () => {
             <DashboardBento
               investments={investments}
               dashboardStats={dashboardStats}
+              onViewTelemetry={(hive) => {
+                setSelectedHive(hive || investments[0] || null);
+                setIsTelemetryOpen(true);
+              }}
             />
           ) : (
             /* dashboardStats failed but investments loaded — show bare table fallback */
@@ -128,6 +206,13 @@ const PortfolioPage = () => {
           )}
         </>
       )}
+
+      {/* Smart Hive Telemetry Modal */}
+      <HiveTelemetryModal
+        isOpen={isTelemetryOpen}
+        onClose={() => setIsTelemetryOpen(false)}
+        investment={selectedHive}
+      />
     </div>
   );
 };

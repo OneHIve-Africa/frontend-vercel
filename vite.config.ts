@@ -11,8 +11,18 @@ export default defineConfig({
     },
   },
   build: {
+    chunkSizeWarningLimit: 1200,
     rollupOptions: {
-      // No external dependencies that need to be excluded from the bundle
+      output: {
+        manualChunks(id) {
+          if (id.includes("node_modules/lottie-web") || id.includes("node_modules/lottie-react")) {
+            return "vendor-lottie";
+          }
+          if (id.includes("node_modules/recharts")) {
+            return "vendor-charts";
+          }
+        },
+      },
     },
   },
 });
