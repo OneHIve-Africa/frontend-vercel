@@ -48,7 +48,7 @@ class AuthApi extends Api {
     data: PasswordResetRequest
   ): Promise<ApiResponse<{ message: string }>> {
     return this.post<{ message: string }>(
-      "/auth/password-reset-request/",
+      "/auth/password-reset/",
       data
     );
   }
@@ -56,13 +56,13 @@ class AuthApi extends Api {
   public async verifyOTP(
     data: VerifyOTPRequest
   ): Promise<ApiResponse<{ message: string }>> {
-    return this.post<{ message: string }>("/auth/verify-otp/", data);
+    return this.post<{ message: string }>("/auth/password-reset/verify-otp/", data);
   }
 
   public async setNewPassword(
     data: SetNewPasswordRequest
   ): Promise<ApiResponse<{ message: string }>> {
-    return this.post<{ message: string }>("/auth/set-new-password/", data);
+    return this.post<{ message: string }>("/auth/password-reset/set-new-password/", data);
   }
 
   public async serverLogout(): Promise<ApiResponse<{ message: string }>> {

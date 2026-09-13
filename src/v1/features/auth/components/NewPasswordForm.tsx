@@ -18,14 +18,21 @@ const NewPasswordForm = () => {
   const { setNewPassword: resetPassword, isLoading, error } = useAuthStore();
 
   useEffect(() => {
-    const storedEmail = localStorage.getItem("r_email");
-    const storedOtp = localStorage.getItem("r_otp");
-    if (!storedEmail || !storedOtp) {
+    const searchParams = new URLSearchParams(window.location.search);
+    const queryEmail = searchParams.get("email");
+    const queryOtp = searchParams.get("otp");
+
+    const emailToUse = queryEmail || localStorage.getItem("r_email");
+    const otpToUse = queryOtp || localStorage.getItem("r_otp") || "";
+
+    if (!emailToUse) {
       navigate("/forgot-password");
       return;
     }
-    setEmail(storedEmail);
-    setOtp(storedOtp);
+    setEmail(emailToUse);
+    if (otpToUse) {
+      setOtp(otpToUse);
+    }
   }, [navigate]);
 
   const handlePasswordReset = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -47,11 +54,14 @@ const NewPasswordForm = () => {
       otp,
       new_password1: newPassword,
       new_password2: confirmPassword,
-    });
+      password: newPassword,
+      password_confirm: confirmPassword,
+    } as any);
     if (success) {
       toast.success("Password has been reset successfully!");
-      // Clean up stored email
+      // Clean up stored email and otp
       localStorage.removeItem("r_email");
+      localStorage.removeItem("r_otp");
       navigate("/change-success");
     } else if (error) {
       toast.error(error);

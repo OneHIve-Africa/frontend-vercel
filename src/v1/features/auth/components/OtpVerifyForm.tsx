@@ -25,6 +25,7 @@ const OtpVerifyForm = (props: Props) => {
 
     const success = await verifyOTP({ email, otp: otpValue });
     if (success) {
+      localStorage.setItem("r_otp", otpValue);
       toast.success("OTP verified successfully");
       navigate("/new-password");
     } else if (error) {

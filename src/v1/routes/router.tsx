@@ -71,6 +71,7 @@ const router = createBrowserRouter([
   { path: "/forgot-password", element: <ForgotPasswordPage /> },
   { path: "/otp-verify", element: <OtpVerifyPage /> },
   { path: "/new-password", element: <NewPasswordPage /> },
+  { path: "/reset-password", element: <NewPasswordPage /> },
   { path: "/change-success", element: <ChangeSuccessPage /> },
   { path: "/onboarding", element: <Onboarding /> },
   { path: "/new-investment", element: <NewInvestment /> },
