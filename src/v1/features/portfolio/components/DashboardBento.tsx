@@ -4,7 +4,6 @@ import { DashboardStats } from "@/v1/api/InvestorDashboardApi";
 import { useUserProfileStore } from "@/v1/features/auth/store/UserProfileStore";
 import { dateUtils } from "@/v1/utils/dateutils";
 import { abstract } from "@/assets";
-import HarvestCountdownWidget from "./HarvestCountdownWidget";
 import {
   AreaChart,
   Area,
@@ -141,10 +140,7 @@ const HIVE_COLOURS: Record<string, string> = {
   lost:    "text-rose-600",
 };
 
-const InvestmentTable: React.FC<{
-  investments: Investment[];
-  onViewTelemetry?: (inv: Investment) => void;
-}> = ({ investments, onViewTelemetry }) => {
+const InvestmentTable: React.FC<{ investments: Investment[] }> = ({ investments }) => {
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<InvStatus>("all");
@@ -231,8 +227,8 @@ const InvestmentTable: React.FC<{
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-stone-50 border-b border-stone-100">
-              {["ID", "Amount (GHS)", "Date", "Interest Earned", "Maturity", "Inv. Status", "Hive Status", "Telemetry"].map((h) => (
-                <th key={h} className={`px-5 py-3 text-[11px] font-semibold text-stone-500 uppercase tracking-wide whitespace-nowrap ${h === "Telemetry" ? "text-right" : "text-left"}`}>
+              {["ID", "Amount (GHS)", "Date", "Interest Earned", "Maturity", "Inv. Status", "Hive Status"].map((h) => (
+                <th key={h} className="px-5 py-3 text-left text-[11px] font-semibold text-stone-500 uppercase tracking-wide whitespace-nowrap">
                   {h}
                 </th>
               ))}
@@ -241,7 +237,7 @@ const InvestmentTable: React.FC<{
           <tbody className="divide-y divide-stone-100">
             {pageSlice.length === 0 ? (
               <tr>
-                <td colSpan={8} className="py-10 text-center text-xs text-stone-400">
+                <td colSpan={7} className="py-10 text-center text-xs text-stone-400">
                   No investments match your search or filter.
                 </td>
               </tr>
@@ -268,16 +264,6 @@ const InvestmentTable: React.FC<{
                   </td>
                   <td className={`px-5 py-3.5 text-xs font-medium ${HIVE_COLOURS[inv.hive_status] ?? "text-stone-500"}`}>
                     {inv.hive_status_summary}
-                  </td>
-                  <td className="px-5 py-3.5 text-right whitespace-nowrap">
-                    <button
-                      type="button"
-                      onClick={() => onViewTelemetry && onViewTelemetry(inv)}
-                      className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 transition cursor-pointer"
-                      title="View live sensor telemetry"
-                    >
-                      <span>🐝 Telemetry</span>
-                    </button>
                   </td>
                 </tr>
               ))
@@ -318,16 +304,6 @@ const InvestmentTable: React.FC<{
               <div className="flex items-center justify-between">
                 <span className="text-xs text-stone-500">Hive Status</span>
                 <span className={`text-xs font-medium ${HIVE_COLOURS[inv.hive_status] ?? "text-stone-500"}`}>{inv.hive_status_summary}</span>
-              </div>
-              <div className="flex items-center justify-between pt-1">
-                <span className="text-xs text-stone-500">Live Sensors</span>
-                <button
-                  type="button"
-                  onClick={() => onViewTelemetry && onViewTelemetry(inv)}
-                  className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 transition cursor-pointer"
-                >
-                  <span>🐝 View Telemetry</span>
-                </button>
               </div>
             </div>
           ))
@@ -473,14 +449,9 @@ const HIVE_LABELS: Record<string, string> = {
 interface DashboardBentoProps {
   investments: Investment[];
   dashboardStats: DashboardStats;
-  onViewTelemetry?: (inv?: Investment) => void;
 }
 
-export const DashboardBento: React.FC<DashboardBentoProps> = ({
-  investments,
-  dashboardStats,
-  onViewTelemetry,
-}) => {
+export const DashboardBento: React.FC<DashboardBentoProps> = ({ investments, dashboardStats }) => {
   const navigate = useNavigate();
   const { profile } = useUserProfileStore();
   const uid = useId().replace(/:/g, "");
@@ -595,13 +566,6 @@ export const DashboardBento: React.FC<DashboardBentoProps> = ({
           </p>
         </div>
       </div>
-
-      {/* Harvest & Payout Countdown Banner */}
-      <HarvestCountdownWidget
-        investments={investments}
-        dashboardStats={dashboardStats}
-        onViewTelemetry={() => onViewTelemetry && onViewTelemetry(investments[0])}
-      />
 
       {/* Row 3 — Pie + Activities + Profile + Payout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
@@ -767,7 +731,7 @@ export const DashboardBento: React.FC<DashboardBentoProps> = ({
           <h2 className="text-sm font-bold text-stone-900">Active Hive Deployments</h2>
           <p className="text-xs text-stone-400 mt-0.5">Search, filter and browse all your investments</p>
         </div>
-        <InvestmentTable investments={investments} onViewTelemetry={onViewTelemetry} />
+        <InvestmentTable investments={investments} />
       </div>
     </div>
   );

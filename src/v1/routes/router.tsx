@@ -23,37 +23,27 @@ import {
 import NotificationLayout from "@/v1/features/notifications/layout/NotificationLayout";
 import Onboarding from "../features/dashboard/features/Onboarding";
 import NewInvestment from "../features/dashboard/features/NewInvestment";
-import { lazy, Suspense } from "react";
-import PageLoader from "../components/common/PageLoader";
+import { FeedbackPage } from "../features/feedback/features";
+import { PaymentSuccess } from "../features/dashboard/features";
+import ResourcesPage from "../features/resources/features/ResourcesPage";
+import PageNotFound from "../features/404/PageNotFound";
+import { FarmersPage } from "../features/admin/features/farmers/features";
+import { Dashboard } from "../features/admin/features/dashboard/features";
+import { Investors } from "../features/admin/features/investors/features";
 import { useUserProfileStore } from "../features/auth/store/UserProfileStore";
+import { Beehives } from "../features/admin/features/beehives/features";
+import { Finance } from "../features/admin/features/finance/features";
+import { Records } from "../features/admin/features/records/features";
+import { Impact } from "../features/admin/features/impact/features";
+import { SettingsPage as AdminSettingsPage } from "../features/admin/features/settings/features";
 import SettingsPage from "../features/settings/features/SettingsPage";
 import ProfileInformation from "../features/settings/components/ProfileInformation";
 import NotificationPreferences from "../features/settings/components/NotificationPreferences";
 import AccountActions from "../features/settings/components/AccountActions";
-
-// Lazy loaded secondary & admin modules
-const FeedbackPage = lazy(() => import("../features/feedback/features").then(m => ({ default: m.FeedbackPage })));
-const ResourcesPage = lazy(() => import("../features/resources/features/ResourcesPage"));
-const FinancialPerformancePage = lazy(() => import("../features/financial-performance/features").then(m => ({ default: m.FinancialPerformancePage })));
-
-const Dashboard = lazy(() => import("../features/admin/features/dashboard/features").then(m => ({ default: m.Dashboard })));
-const FarmersPage = lazy(() => import("../features/admin/features/farmers/features").then(m => ({ default: m.FarmersPage })));
-const Investors = lazy(() => import("../features/admin/features/investors/features").then(m => ({ default: m.Investors })));
-const Beehives = lazy(() => import("../features/admin/features/beehives/features").then(m => ({ default: m.Beehives })));
-const Finance = lazy(() => import("../features/admin/features/finance/features").then(m => ({ default: m.Finance })));
-const Records = lazy(() => import("../features/admin/features/records/features").then(m => ({ default: m.Records })));
-const AdminImpact = lazy(() => import("../features/admin/features/impact/features").then(m => ({ default: m.Impact })));
-const AdminSettingsPage = lazy(() => import("../features/admin/features/settings/features").then(m => ({ default: m.SettingsPage })));
-const AdminResources = lazy(() => import("../features/admin/features/resources/features").then(m => ({ default: m.Resources })));
-const CommunicationLayout = lazy(() => import("../features/admin/features/communications/layout/CommunicationLayout"));
-const Messages = lazy(() => import("../features/admin/features/communications/features").then(m => ({ default: m.Messages })));
-
-import { PaymentSuccess } from "../features/dashboard/features";
-import PageNotFound from "../features/404/PageNotFound";
-
-const withSuspense = (element: React.ReactNode) => (
-  <Suspense fallback={<PageLoader />}>{element}</Suspense>
-);
+import { Resources } from "../features/admin/features/resources/features";
+import CommunicationLayout from "../features/admin/features/communications/layout/CommunicationLayout";
+import { Messages } from "../features/admin/features/communications/features";
+import { FinancialPerformancePage } from "../features/financial-performance/features";
 
 // Role-based components to handle path collisions
 const RoleBasedRedirect = () => {
@@ -69,19 +59,19 @@ const RoleBasedSettings = () => {
   const { profile } = useUserProfileStore();
   
   if (profile?.position === "Administrator") {
-    return withSuspense(<AdminSettingsPage />);
+    return <AdminSettingsPage />;
   }
   return <SettingsPage />;
 };
 
 const RoleBasedResourcesHelper = () => {
   const { profile } = useUserProfileStore();
-  return profile?.position === "Administrator" ? withSuspense(<AdminResources />) : withSuspense(<ResourcesPage />);
+  return profile?.position === "Administrator" ? <Resources /> : <ResourcesPage />;
 };
 
 const RoleBasedImpactHelper = () => {
   const { profile } = useUserProfileStore();
-  return profile?.position === "Administrator" ? withSuspense(<AdminImpact />) : <ImpactPage />;
+  return profile?.position === "Administrator" ? <Impact /> : <ImpactPage />;
 };
 
 // Static router definition
@@ -120,7 +110,7 @@ const router = createBrowserRouter([
       // Investor Routes
       { path: "portfolio", element: <PortfolioPage /> },
       { path: "impact", element: <RoleBasedImpactHelper /> },
-      { path: "financial-performance", element: withSuspense(<FinancialPerformancePage />) },
+      { path: "financial-performance", element: <FinancialPerformancePage /> },
       {
         path: "notification",
         element: <NotificationLayout />,
@@ -132,22 +122,22 @@ const router = createBrowserRouter([
         ],
       },
       { path: "notifications", element: <Navigate to="/notification" replace /> },
-      { path: "feedback", element: withSuspense(<FeedbackPage />) },
+      { path: "feedback", element: <FeedbackPage /> },
       { path: "resources", element: <RoleBasedResourcesHelper /> },
 
       // Admin Routes
-      { path: "dashboard", element: withSuspense(<Dashboard />) },
-      { path: "farmers", element: withSuspense(<FarmersPage />) },
-      { path: "investors", element: withSuspense(<Investors />) },
-      { path: "beehives", element: withSuspense(<Beehives />) },
-      { path: "finance", element: withSuspense(<Finance />) },
-      { path: "records", element: withSuspense(<Records />) },
+      { path: "dashboard", element: <Dashboard /> },
+      { path: "farmers", element: <FarmersPage /> },
+      { path: "investors", element: <Investors /> },
+      { path: "beehives", element: <Beehives /> },
+      { path: "finance", element: <Finance /> },
+      { path: "records", element: <Records /> },
       { 
         path: "communication",
-        element: withSuspense(<CommunicationLayout />),
+        element: <CommunicationLayout />,
         children: [
           { index: true, element: <NotificationsPage /> },
-          { path: "messages", element: withSuspense(<Messages />) },
+          { path: "messages", element: <Messages /> },
         ],
       },
     ]
