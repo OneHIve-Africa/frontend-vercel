@@ -64,6 +64,16 @@ const RoleBasedSettings = () => {
   return <SettingsPage />;
 };
 
+const RoleBasedResourcesHelper = () => {
+  const { profile } = useUserProfileStore();
+  return profile?.position === "Administrator" ? <Resources /> : <ResourcesPage />;
+};
+
+const RoleBasedImpactHelper = () => {
+  const { profile } = useUserProfileStore();
+  return profile?.position === "Administrator" ? <Impact /> : <ImpactPage />;
+};
+
 // Static router definition
 const router = createBrowserRouter([
   { path: "/login", element: <LoginPage /> },
@@ -88,20 +98,8 @@ const router = createBrowserRouter([
       { index: true, element: <RoleBasedRedirect /> },
       { 
         path: "settings", 
-        // For admin, settings is a direct page. For investor, it's a layout with children.
-        // We handle this by checking the role and rendering the appropriate component structure.
-        // However, since their children structure differs in the original code, 
-        // we'll map them explicitly to avoid conflict.
-        
-        // Strategy: We list all potential routes here. ProtectedRoute guards the parent.
-        // But for "settings", the structure is different.
-        // Admin: /settings -> AdminSettingsPage
-        // Investor: /settings -> SettingsPage (layout) -> children
-        
-        // To keep it simple, we use a wrapper for the /settings route
         element: <RoleBasedSettings />,
         children: [
-          // Investor settings children
           { index: true, element: <Navigate to="profile" replace /> },
           { path: "profile", element: <ProfileInformation /> },
           { path: "notifications", element: <NotificationPreferences /> },
@@ -111,7 +109,7 @@ const router = createBrowserRouter([
 
       // Investor Routes
       { path: "portfolio", element: <PortfolioPage /> },
-      { path: "impact", element: <ImpactPage /> },
+      { path: "impact", element: <RoleBasedImpactHelper /> },
       { path: "financial-performance", element: <FinancialPerformancePage /> },
       {
         path: "notification",
@@ -125,7 +123,7 @@ const router = createBrowserRouter([
       },
       { path: "notifications", element: <Navigate to="/notification" replace /> },
       { path: "feedback", element: <FeedbackPage /> },
-      { path: "resources", element: <ResourcesPage /> },
+      { path: "resources", element: <RoleBasedResourcesHelper /> },
 
       // Admin Routes
       { path: "dashboard", element: <Dashboard /> },
@@ -134,14 +132,6 @@ const router = createBrowserRouter([
       { path: "beehives", element: <Beehives /> },
       { path: "finance", element: <Finance /> },
       { path: "records", element: <Records /> },
-      // Note: "resources" and "impact" paths collide. 
-      // "resources" is handled by the Investor route above (ResourcesPage).
-      // If Admin needs a different Resources page, logic is needed.
-      // Based on original code:
-      // Investor: path: "resources", element: <ResourcesPage />
-      // Admin:    path: "resources", element: <Resources />
-      // Resolution: We need a RoleBasedResources component.
-      
       { 
         path: "communication",
         element: <CommunicationLayout />,
@@ -150,37 +140,10 @@ const router = createBrowserRouter([
           { path: "messages", element: <Messages /> },
         ],
       },
-      // Colliding paths handled via specific routes or conditional rendering:
-      // 1. Impact
-      // Investor: path: "impact", element: <ImpactPage />
-      // Admin:    path: "impact", element: <Impact /> (Admin feature)
-      // Since they share the path "impact", we need a RoleBasedImpact component.
     ]
   },
   { path: "*", element: <PageNotFound /> },
 ]);
-
-// Helper for Resources collision
-const RoleBasedResourcesHelper = () => {
-    const { profile } = useUserProfileStore();
-    return profile?.position === "Administrator" ? <Resources /> : <ResourcesPage />;
-};
-
-// Helper for Impact collision
-const RoleBasedImpactHelper = () => {
-    const { profile } = useUserProfileStore();
-    return profile?.position === "Administrator" ? <Impact /> : <ImpactPage />;
-};
-
-// Patching the router with the helpers
-const routes = router.routes[9].children!; // The "/" children
-// Find and replace "resources"
-const resRoute = routes.find(r => r.path === "resources") as any;
-if (resRoute) resRoute.element = <RoleBasedResourcesHelper />;
-// Find and replace "impact" 
-const impactRoute = routes.find(r => r.path === "impact") as any;
-if (impactRoute) impactRoute.element = <RoleBasedImpactHelper />;
-
 
 const Router = () => {
   return <RouterProvider router={router} />;
