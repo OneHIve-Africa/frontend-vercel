@@ -9,6 +9,8 @@ export interface UserProfile {
   other_phone: string;
   location: string;
   position: string;
+  department?: string;
+  role?: string;
   profile_image_url: string | null;
   is_first: boolean;
   created_at: string;

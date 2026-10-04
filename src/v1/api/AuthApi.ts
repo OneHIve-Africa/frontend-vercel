@@ -28,6 +28,14 @@ class AuthApi extends Api {
     return this.post<LoginResponse>("/auth/login/", data);
   }
 
+  public async verifyMFA(data: { email: string; otp: string }): Promise<ApiResponse<LoginResponse>> {
+    return this.post<LoginResponse>("/auth/verify-mfa/", data);
+  }
+
+  public async resendMFA(data: { email: string }): Promise<ApiResponse<{ message: string }>> {
+    return this.post<{ message: string }>("/auth/resend-mfa/", data);
+  }
+
   public async logout(): Promise<ApiResponse<void>> {
     const refreshToken = localStorage.getItem("refresh_token");
     // Send refresh token as required by backend

@@ -10,11 +10,12 @@ import {
   BarChart2,
   Settings,
   LogOut,
-  MonitorUp,
-  Sprout,
   Activity,
   Library,
+  Building2,
+  TrendingUp,
 } from "lucide-react";
+import { FarmerIcon, BeehiveIcon, StackOfCashIcon } from "./sidebarIcons";
 
 export interface SidebarItem {
   id: number;
@@ -42,7 +43,7 @@ const logout = async () => {
 const adminSidebarData: SidebarItem[] = [
   {
     id: 0,
-    title: "Dashboard   ",
+    title: "Dashboard",
     path: "/dashboard",
     icon: LayoutDashboard,
   },
@@ -50,25 +51,31 @@ const adminSidebarData: SidebarItem[] = [
     id: 1,
     title: "Farmers",
     path: "/farmers",
-    icon: Sprout,
+    icon: FarmerIcon,
   },
   {
     id: 2,
     title: "Investors",
     path: "/investors",
-    icon: Heart,
+    icon: TrendingUp,
   },
   {
     id: 3,
     title: "Beehives",
     path: "/beehives",
-    icon: Heart,
+    icon: BeehiveIcon,
   },
   {
     id: 4,
     title: "Finance",
     path: "/finance",
-    icon: MonitorUp,
+    icon: StackOfCashIcon,
+  },
+  {
+    id: 5,
+    title: "Fulfillment Hubs",
+    path: "/fulfillment",
+    icon: Building2,
   },
   {
     id: 6,

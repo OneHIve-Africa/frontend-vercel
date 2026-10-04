@@ -10,9 +10,22 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
-  profile: object;
-  refresh: string;
-  access: string;
+  profile?: object;
+  refresh?: string;
+  access?: string;
+  email?: string;
+  role?: string;
+  mfa_required?: boolean;
+  message?: string;
+}
+
+export interface VerifyMFARequest {
+  email: string;
+  otp: string;
+}
+
+export interface ResendMFARequest {
+  email: string;
 }
 
 export interface RegisterRequest {
@@ -54,6 +67,8 @@ export interface UserSettings {
   hive_activity_alerts: boolean;
   environmental_impact_reports: boolean;
   new_investment_opportunities: boolean;
+  mfa_enabled?: boolean;
+  login_notifications?: boolean;
   terms_of_service_signed: boolean;
 }
 

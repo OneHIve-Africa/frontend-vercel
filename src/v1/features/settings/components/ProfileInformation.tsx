@@ -13,6 +13,8 @@ import {
   Save,
   RotateCcw,
   Loader2,
+  Briefcase,
+  Building2,
 } from "lucide-react";
 import { useUserProfileStore } from "@/v1/features/auth/store/UserProfileStore";
 import { UserProfile } from "@/v1/api/UserProfileApi";
@@ -50,6 +52,8 @@ const ProfileInformation: React.FC = () => {
         primary_phone: profile.primary_phone || "",
         other_phone: profile.other_phone || "",
         location: profile.location || "",
+        position: profile.position || "",
+        department: (profile as any).department || "",
         profile_image_url: profile.profile_image_url || "",
       };
       setFormData(data);
@@ -464,6 +468,57 @@ const ProfileInformation: React.FC = () => {
                   value={formData.location || ""}
                   onChange={handleChange}
                   placeholder="e.g. Accra, Greater Accra Region"
+                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-stone-300 rounded-xl text-base sm:text-sm text-stone-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 transition-all shadow-2xs"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="pt-2">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-stone-500 sm:text-stone-400 mb-2.5 sm:mb-4">
+            Role & Department
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-5">
+            <div>
+              <label
+                htmlFor="position"
+                className="block text-xs font-semibold uppercase text-stone-600 mb-1"
+              >
+                Position / Job Title
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-stone-400">
+                  <Briefcase className="w-4 h-4" />
+                </div>
+                <input
+                  type="text"
+                  id="position"
+                  value={formData.position || ""}
+                  onChange={handleChange}
+                  placeholder="e.g. Administrator, Apiary Lead"
+                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-stone-300 rounded-xl text-base sm:text-sm text-stone-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 transition-all shadow-2xs"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label
+                htmlFor="department"
+                className="block text-xs font-semibold uppercase text-stone-600 mb-1"
+              >
+                Department / Team
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-stone-400">
+                  <Building2 className="w-4 h-4" />
+                </div>
+                <input
+                  type="text"
+                  id="department"
+                  value={formData.department || ""}
+                  onChange={handleChange}
+                  placeholder="e.g. Administration, Operations"
                   className="w-full pl-10 pr-4 py-2.5 bg-white border border-stone-300 rounded-xl text-base sm:text-sm text-stone-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 transition-all shadow-2xs"
                 />
               </div>

@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { 
   CheckCircle2, 
@@ -17,6 +16,7 @@ import {
 import { useUserProfileStore } from "@/v1/features/auth/store/UserProfileStore";
 import { HiveRoiCalculator } from "./HiveRoiCalculator";
 import { abso, man_hive, manWithApples, LeafInHand } from "@/assets";
+import HoneycombPattern from "@/v1/components/common/HoneycombPattern";
 
 interface FAQItem {
   question: string;
@@ -101,67 +101,69 @@ export const InvestorLaunchpad: React.FC = () => {
   const firstName = profile?.first_name || "Partner";
 
   return (
-    <div className="w-full space-y-10 pb-16">
-      {/* 1. Hero */}
-      <div className="relative rounded-3xl overflow-hidden shadow-sm border border-stone-200/60">
-        <div className="grid grid-cols-1 lg:grid-cols-5">
-          {/* ── Left: dark green brand panel ── */}
-          <div className="relative lg:col-span-3 bg-[#1b9d3c] px-8 py-10 sm:px-12 sm:py-14 flex flex-col justify-between gap-8 overflow-hidden min-h-[300px]">
-            {/* Abstract texture */}
-            <img
-              src={abso}
-              alt=""
-              aria-hidden="true"
-              className="absolute inset-0 w-full h-full object-cover opacity-[0.18] mix-blend-soft-light pointer-events-none select-none"
-            />
+    <div className="w-full space-y-8 pb-16">
+      {/* 1. Page header banner */}
+      <div className="relative overflow-hidden bg-white border border-stone-200/80 rounded-2xl p-5 sm:p-7 shadow-sm">
+        <HoneycombPattern opacity={0.04} color="#1b9d3c" />
+        <img
+          src={abso}
+          alt=""
+          aria-hidden="true"
+          className="absolute -right-10 -top-12 w-52 h-52 object-contain opacity-[0.12] pointer-events-none select-none"
+        />
 
-            <div className="relative z-10">
-              <p className="text-green-200 text-xs font-semibold uppercase tracking-widest mb-4">
-                Welcome back, {firstName}
-              </p>
-              <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight leading-tight max-w-md">
-                Put your capital to work in Ghana's apiary economy.
-              </h1>
-              <p className="text-green-100/80 text-sm mt-4 max-w-sm leading-relaxed">
-                Fund hives, earn bi-annual honey dividends, and support smallholder farmers — all through a single transparent platform.
-              </p>
-            </div>
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
+          {/* Left: greeting + description */}
+          <div>
+            <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">
+              Welcome back, {firstName}
+            </p>
+            <h2 className="text-xl font-bold text-stone-900 tracking-tight">
+              Your Hive Investment Portal
+            </h2>
+            <p className="text-sm text-stone-500 mt-1 max-w-md leading-relaxed">
+              Fund hives, earn bi-annual honey dividends, and support smallholder farmers across Ghana.
+            </p>
 
-            <div className="relative z-10 flex flex-wrap gap-3">
-              <button
-                type="button"
-                onClick={() => navigate("/new-investment")}
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white text-[#1b9d3c] text-sm font-bold hover:bg-green-50 transition shadow-sm cursor-pointer"
-              >
-                Fund Your First Hive
-                <ArrowRight className="w-4 h-4" />
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  document.getElementById("simulator-section")?.scrollIntoView({ behavior: "smooth" });
-                }}
-                className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-white/15 border border-white/25 text-white text-sm font-semibold hover:bg-white/25 transition cursor-pointer"
-              >
-                Run ROI Simulation
-                <ChevronDown className="w-4 h-4" />
-              </button>
+            {/* Inline key stats */}
+            <div className="flex flex-wrap items-center gap-2 mt-4">
+              {[
+                { label: "Target APR", value: "22%" },
+                { label: "Harvest Cycle", value: "6 months" },
+                { label: "Coverage", value: "100% insured" },
+              ].map((s) => (
+                <span
+                  key={s.label}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-stone-100 border border-stone-200/80 text-[11px] font-medium text-stone-600"
+                >
+                  <span className="font-bold text-stone-900">{s.value}</span>
+                  <span className="text-stone-400">·</span>
+                  {s.label}
+                </span>
+              ))}
             </div>
           </div>
 
-          {/* ── Right: stat strip ── */}
-          <div className="lg:col-span-2 bg-white divide-y divide-stone-100 flex flex-col justify-center">
-            {[
-              { label: "Target Annual Return", value: "22%", sub: "Per hive pack — bi-annual payouts" },
-              { label: "Harvest Cycle", value: "6 months", sub: "June / December distribution" },
-              { label: "Investor Coverage", value: "100%", sub: "Hive replacement guarantee" },
-            ].map((stat) => (
-              <div key={stat.label} className="px-8 py-6 flex flex-col gap-1">
-                <p className="text-[11px] font-semibold text-stone-400 uppercase tracking-wide">{stat.label}</p>
-                <p className="text-2xl font-extrabold text-stone-900">{stat.value}</p>
-                <p className="text-xs text-stone-500">{stat.sub}</p>
-              </div>
-            ))}
+          {/* Right: CTAs */}
+          <div className="flex flex-col sm:items-end gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={() => navigate("/new-investment")}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-oha_secondary text-white text-sm font-semibold hover:bg-shadsd transition shadow-sm cursor-pointer"
+            >
+              Fund Your First Hive
+              <ArrowRight className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                document.getElementById("simulator-section")?.scrollIntoView({ behavior: "smooth" });
+              }}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white border border-stone-200 text-stone-700 text-sm font-semibold hover:bg-stone-50 transition cursor-pointer"
+            >
+              Run ROI Simulation
+              <ChevronDown className="w-4 h-4" />
+            </button>
           </div>
         </div>
       </div>
@@ -356,14 +358,9 @@ export const InvestorLaunchpad: React.FC = () => {
                   )}
                 </button>
                 {isOpen && (
-                  <motion.div 
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    transition={{ duration: 0.2 }}
-                    className="mt-2 text-xs sm:text-sm text-gray-600 leading-relaxed pr-6"
-                  >
+                  <div className="mt-2 text-xs sm:text-sm text-stone-600 leading-relaxed pr-6">
                     {faq.answer}
-                  </motion.div>
+                  </div>
                 )}
               </div>
             );

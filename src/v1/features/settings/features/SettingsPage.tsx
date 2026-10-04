@@ -1,6 +1,6 @@
 import React from "react";
-import { Outlet, NavLink } from "react-router-dom";
-import { User, Bell, ShieldCheck, CheckCircle2 } from "lucide-react";
+import { Outlet, NavLink, Link } from "react-router-dom";
+import { User, Bell, ShieldCheck, CheckCircle2, Sliders, ArrowRight, Shield } from "lucide-react";
 import { useUserProfileStore } from "@/v1/features/auth/store/UserProfileStore";
 import { logo as defaultAvatar, abso, abstract } from "@/assets";
 import HoneycombPattern from "@/v1/components/common/HoneycombPattern";
@@ -11,38 +11,45 @@ const settingsNav = [
     fullName: "Profile Information",
     path: "/settings/profile",
     icon: User,
-    desc: "Personal info & contact details",
+    desc: "Personal info, photo & department",
+  },
+  {
+    name: "Security",
+    fullName: "Security & Authentication",
+    path: "/settings/account",
+    icon: ShieldCheck,
+    desc: "Password, Two-Factor 2FA & sessions",
   },
   {
     name: "Notifications",
     fullName: "Notification Preferences",
     path: "/settings/notifications",
     icon: Bell,
-    desc: "Yield, hive & impact alerts",
-  },
-  {
-    name: "Security",
-    fullName: "Security & Legal",
-    path: "/settings/account",
-    icon: ShieldCheck,
-    desc: "Password, compliance & legal",
+    desc: "Alerts, activity & notification preferences",
   },
 ];
 
 const SettingsPage: React.FC = () => {
   const { profile } = useUserProfileStore();
+  const storedRole = typeof window !== "undefined" ? localStorage.getItem("role") : null;
+  const isAdmin =
+    profile?.position === "Administrator" ||
+    (profile as any)?.role === "admin" ||
+    storedRole === "admin";
 
   const fullName =
     profile?.first_name || profile?.last_name
       ? `${profile.first_name || ""} ${profile.last_name || ""}`.trim()
+      : isAdmin
+      ? "Administrator"
       : "Investor Partner";
 
   return (
     <div className="w-full min-h-full py-1 sm:py-6 px-0 sm:px-4 lg:px-8 space-y-4 sm:space-y-6">
-      {/* Top Investor Account Banner - Soft translucent white on mobile, crisp card on sm+ */}
+      {/* Top User Account Banner */}
       <div className="relative overflow-hidden bg-white/85 sm:bg-white backdrop-blur-xs border border-stone-200/80 rounded-2xl p-4 sm:p-6 lg:p-8 shadow-xs sm:shadow-sm">
         {/* Subtle contour & honeycomb textures */}
-        <HoneycombPattern opacity={0.05} color="#1b9d3c" />
+        <HoneycombPattern opacity={0.05} color={isAdmin ? "#d97706" : "#1b9d3c"} />
         <img
           src={abso}
           alt=""
@@ -68,7 +75,9 @@ const SettingsPage: React.FC = () => {
               </div>
               <span
                 title="Account active"
-                className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 sm:w-4 sm:h-4 bg-emerald-500 border-2 border-white rounded-full"
+                className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 sm:w-4 sm:h-4 border-2 border-white rounded-full ${
+                  isAdmin ? "bg-amber-500" : "bg-emerald-500"
+                }`}
               />
             </div>
 
@@ -77,25 +86,41 @@ const SettingsPage: React.FC = () => {
                 <h1 className="text-lg sm:text-2xl font-bold text-stone-900 tracking-tight truncate">
                   {fullName}
                 </h1>
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] sm:text-xs font-semibold bg-emerald-100/70 sm:bg-emerald-50 text-emerald-800 sm:text-emerald-700 border border-emerald-300 sm:border-emerald-200 shrink-0">
-                  <CheckCircle2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-600" />
-                  Verified
-                </span>
+                {isAdmin ? (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] sm:text-xs font-semibold bg-amber-100 text-amber-900 border border-amber-300 shrink-0">
+                    <Shield className="w-3 h-3 text-amber-700" />
+                    Administrator
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] sm:text-xs font-semibold bg-emerald-100/70 sm:bg-emerald-50 text-emerald-800 sm:text-emerald-700 border border-emerald-300 sm:border-emerald-200 shrink-0">
+                    <CheckCircle2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-600" />
+                    Verified
+                  </span>
+                )}
               </div>
               <p className="text-xs sm:text-sm text-stone-500 truncate max-w-xs sm:max-w-md">
-                {profile?.email || "investor@onehive.africa"}
+                {profile?.email || (isAdmin ? "admin@onehive.africa" : "investor@onehive.africa")}
               </p>
             </div>
           </div>
 
-          {/* Quick Account Badges */}
+          {/* Quick Account Badges & System Settings Link */}
           <div className="flex flex-wrap items-center gap-2 sm:gap-3 pt-1 md:pt-0">
             <div className="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-stone-100 sm:bg-stone-50 border border-stone-200/80 text-[11px] sm:text-xs font-medium text-stone-700 sm:text-stone-600">
-              Role: <span className="font-semibold text-stone-900 sm:text-stone-800">{profile?.position || "Investor Partner"}</span>
+              Role: <span className="font-semibold text-stone-900 sm:text-stone-800">{profile?.position || (isAdmin ? "Administrator" : "Investor Partner")}</span>
             </div>
-            <div className="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-amber-100/70 sm:bg-amber-50 border border-amber-300/80 sm:border-amber-200/70 text-[11px] sm:text-xs font-medium text-amber-900 sm:text-amber-800">
-              Status: <span className="font-semibold">Active Member</span>
-            </div>
+
+            {isAdmin && (
+              <Link
+                to="/admin/settings"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-stone-900 text-white hover:bg-stone-800 shadow-xs transition-all cursor-pointer"
+                title="Manage User Access, Roles, Audit Logs and System Configuration"
+              >
+                <Sliders className="w-3.5 h-3.5 text-amber-400" />
+                <span>System Settings</span>
+                <ArrowRight className="w-3.5 h-3.5 opacity-70" />
+              </Link>
+            )}
           </div>
         </div>
       </div>

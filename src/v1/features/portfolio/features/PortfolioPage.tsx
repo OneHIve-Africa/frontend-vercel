@@ -3,7 +3,7 @@ import useInvestmentStore from "../store/InvestmentStore";
 import InvestorDashboardApi, { DashboardStats } from "@/v1/api/InvestorDashboardApi";
 import { InvestorLaunchpad } from "../components/InvestorLaunchpad";
 import { DashboardBento } from "../components/DashboardBento";
-import { Sparkles, LayoutDashboard, PlusCircle } from "lucide-react";
+import { Calculator, LayoutDashboard, PlusCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const PortfolioPage = () => {
@@ -74,11 +74,11 @@ const PortfolioPage = () => {
                 onClick={() => setActiveTab("launchpad")}
                 className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition cursor-pointer flex items-center gap-1.5 ${
                   activeTab === "launchpad"
-                    ? "bg-white text-oha_primary shadow-sm"
+                    ? "bg-white text-stone-900 shadow-sm"
                     : "text-stone-500 hover:text-stone-900"
                 }`}
               >
-                <Sparkles className="w-3.5 h-3.5 text-oha_primary" />
+                <Calculator className="w-3.5 h-3.5" />
                 <span>Simulator</span>
               </button>
             </div>

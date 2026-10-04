@@ -8,6 +8,7 @@ export interface SystemConfig {
   carbon_offset_per_tree: number;
   regions: string[];
   require_2fa: boolean;
+  login_notifications?: boolean;
   password_expiry_days: number;
   session_timeout_minutes: number;
   updated_at: string;

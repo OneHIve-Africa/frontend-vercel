@@ -44,34 +44,36 @@ import { Resources } from "../features/admin/features/resources/features";
 import CommunicationLayout from "../features/admin/features/communications/layout/CommunicationLayout";
 import { Messages } from "../features/admin/features/communications/features";
 import { FinancialPerformancePage } from "../features/financial-performance/features";
+import { FulfillmentHubsPage, FulfillmentCenterDetail } from "../features/admin/features/fulfillment";
+
+// Role-based helper
+const checkIsAdmin = (profile: any) => {
+  const role = typeof window !== "undefined" ? localStorage.getItem("role") : null;
+  return (
+    profile?.position === "Administrator" ||
+    profile?.role === "admin" ||
+    role === "admin"
+  );
+};
 
 // Role-based components to handle path collisions
 const RoleBasedRedirect = () => {
   const { profile } = useUserProfileStore();
   
-  if (profile?.position === "Administrator") {
+  if (checkIsAdmin(profile)) {
     return <Navigate to="/dashboard" replace />;
   }
   return <Navigate to="/portfolio" replace />;
 };
 
-const RoleBasedSettings = () => {
-  const { profile } = useUserProfileStore();
-  
-  if (profile?.position === "Administrator") {
-    return <AdminSettingsPage />;
-  }
-  return <SettingsPage />;
-};
-
 const RoleBasedResourcesHelper = () => {
   const { profile } = useUserProfileStore();
-  return profile?.position === "Administrator" ? <Resources /> : <ResourcesPage />;
+  return checkIsAdmin(profile) ? <Resources /> : <ResourcesPage />;
 };
 
 const RoleBasedImpactHelper = () => {
   const { profile } = useUserProfileStore();
-  return profile?.position === "Administrator" ? <Impact /> : <ImpactPage />;
+  return checkIsAdmin(profile) ? <Impact /> : <ImpactPage />;
 };
 
 // Static router definition
@@ -98,14 +100,20 @@ const router = createBrowserRouter([
       { index: true, element: <RoleBasedRedirect /> },
       { 
         path: "settings", 
-        element: <RoleBasedSettings />,
+        element: <SettingsPage />,
         children: [
           { index: true, element: <Navigate to="profile" replace /> },
           { path: "profile", element: <ProfileInformation /> },
           { path: "notifications", element: <NotificationPreferences /> },
           { path: "account", element: <AccountActions /> },
+          { path: "security", element: <Navigate to="/settings/account" replace /> },
         ]
       },
+      // Convenience aliases for Profile Settings
+      { path: "profile", element: <Navigate to="/settings/profile" replace /> },
+      { path: "profile-settings", element: <Navigate to="/settings/profile" replace /> },
+      // Admin System Settings route (matching Sidebar & System Settings links)
+      { path: "admin/settings", element: <AdminSettingsPage /> },
 
       // Investor Routes
       { path: "portfolio", element: <PortfolioPage /> },
@@ -131,6 +139,8 @@ const router = createBrowserRouter([
       { path: "investors", element: <Investors /> },
       { path: "beehives", element: <Beehives /> },
       { path: "finance", element: <Finance /> },
+      { path: "fulfillment", element: <FulfillmentHubsPage /> },
+      { path: "fulfillment/:id", element: <FulfillmentCenterDetail /> },
       { path: "records", element: <Records /> },
       { 
         path: "communication",

@@ -1,12 +1,14 @@
 import React, { useState } from "react";
-import { ChevronDown, Search } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 import SystemConfigForm from "../components/SystemConfigForm";
 import UserAccessTable from "../components/UserAccessTable";
+import AuditLogViewer from "../components/AuditLogViewer";
 import LoginSettingsForm from "../components/LoginSettingsForm";
 import BackupRecovery from "../components/BackupRecovery";
-import AddAdminModal from "../components/AddAdminModal";
+
+import { Link } from "react-router-dom";
+import { User, ArrowRight } from "lucide-react";
 
 interface TabItem {
   name: string;
@@ -15,111 +17,79 @@ interface TabItem {
 
 const SettingsPage: React.FC = () => {
   const [activeMenu, setActiveMenu] = useState<number>(0);
-  const [filter, setFilter] = useState<string>("admin"); // Default view: Admin only
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [isAddAdminOpen, setIsAddAdminOpen] = useState(false);
 
   const tabData: TabItem[] = [
     { name: "User Access Controls", id: 0 },
-    { name: "Login Settings", id: 1 },
-    { name: "Backup and Data Recovery", id: 2 },
-    { name: "System Configuration", id: 3 },
-  ];
-
-  const filterOptions = [
-    { label: "Admins Only", value: "admin" },
-    { label: "Farmers", value: "farmer" },
-    { label: "Investors", value: "investor" },
-    { label: "All Users", value: "all" },
+    { name: "Audit Logs", id: 1 },
+    { name: "Login Settings", id: 2 },
+    { name: "Backup and Data Recovery", id: 3 },
+    { name: "System Configuration", id: 4 },
   ];
 
   return (
-    <div>
-      <div className="flex justify-between items-center w-full p-4 mb-4">
-        <div className="flex items-center w-72 rounded-full border border-gray-200 px-4 py-2">
-          <Search className="w-4 h-4 text-gray-400 mr-2" />
-          <input
-            type="text"
-            placeholder="Search"
-            className="w-full outline-none bg-transparent text-sm text-gray-700 placeholder:text-gray-400"
-          />
+    <div className="w-full space-y-4">
+      {/* Top Header */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-2">
+        <div>
+          <h2 className="text-xl font-bold text-gray-900">
+            System Administration & Settings
+          </h2>
+          <p className="text-xs text-gray-500">
+            Manage user access controls, compliance audit logs, and security parameters
+          </p>
         </div>
 
-        {/* Buttons */}
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => setIsAddAdminOpen(true)}
-            className="bg-oha_primary text-white text-sm font-medium rounded-full px-5 py-2 transition cursor-pointer hover:bg-opacity-90"
-          >
-            Add admin
-          </button>
-
-          <div className="relative">
-            <button
-              onClick={() => setIsFilterOpen(!isFilterOpen)}
-              className="flex items-center gap-1 border border-gray-300 rounded-full px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 transition cursor-pointer"
-            >
-              {filterOptions.find(opt => opt.value === filter)?.label || "Filter"}
-              <ChevronDown className="w-4 h-4" />
-            </button>
-
-            {isFilterOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10 border border-gray-100">
-                {filterOptions.map((option) => (
-                  <button
-                    key={option.value}
-                    onClick={() => {
-                      setFilter(option.value);
-                      setIsFilterOpen(false);
-                    }}
-                    className={`block w-full text-left px-4 py-2 text-sm ${filter === option.value ? 'bg-gray-50 text-oha_primary font-medium' : 'text-gray-700 hover:bg-gray-50'}`}
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
+        <Link
+          to="/settings/profile"
+          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border border-stone-200 bg-white hover:bg-stone-50 text-xs font-semibold text-stone-700 shadow-2xs transition-colors shrink-0"
+          title="Go to your personal Profile Settings"
+        >
+          <User className="w-3.5 h-3.5 text-stone-500" />
+          <span>My Profile Settings</span>
+          <ArrowRight className="w-3.5 h-3.5 text-stone-400" />
+        </Link>
       </div>
+
       <motion.div
-        className="w-full bg-white rounded-[10px]"
-        initial={{ opacity: 0, y: 40 }}
+        className="w-full bg-white rounded-xl shadow-2xs border border-gray-100 overflow-hidden"
+        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3, duration: 0.5 }}
+        transition={{ delay: 0.15, duration: 0.4 }}
       >
         {/* Tab Menu */}
-        <div className="flex border-b border-[rgba(0,0,0,0.07)]">
+        <div className="flex border-b border-gray-100 overflow-x-auto no-scrollbar">
           {tabData.map((item) => (
-            <motion.div
+            <button
               key={item.id}
-              whileHover={{ scale: 1.03 }}
-              className={`cursor-pointer px-8 py-6 transition-all duration-300 ${activeMenu === item.id
-                  ? "border-b-2 border-oha_primary text-oha_primary font-semibold"
-                  : "text-gray-600"
-                }`}
               onClick={() => setActiveMenu(item.id)}
+              className={`px-6 py-4 text-xs font-medium transition cursor-pointer whitespace-nowrap border-b-2 ${
+                activeMenu === item.id
+                  ? "border-oha_primary text-oha_primary font-bold bg-orange-50/20"
+                  : "border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+              }`}
             >
               {item.name}
-            </motion.div>
+            </button>
           ))}
         </div>
 
         {/* Tab Content */}
-        <div className="p-4">
+        <div className="p-5">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeMenu}
-              initial={{ opacity: 0, y: 10 }}
+              initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.3 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2 }}
             >
               {activeMenu === 0 ? (
-                <UserAccessTable filter={filter} />
+                <UserAccessTable />
               ) : activeMenu === 1 ? (
-                <LoginSettingsForm />
+                <AuditLogViewer />
               ) : activeMenu === 2 ? (
+                <LoginSettingsForm />
+              ) : activeMenu === 3 ? (
                 <BackupRecovery />
               ) : (
                 <SystemConfigForm />
@@ -128,14 +98,6 @@ const SettingsPage: React.FC = () => {
           </AnimatePresence>
         </div>
       </motion.div>
-
-      <AddAdminModal
-        isOpen={isAddAdminOpen}
-        onClose={() => setIsAddAdminOpen(false)}
-        onSuccess={() => {
-          // You could trigger a table refresh here if your table accepts a refresh prop
-        }}
-      />
     </div>
   );
 };

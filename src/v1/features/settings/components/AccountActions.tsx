@@ -13,20 +13,37 @@ import {
   ExternalLink,
   Scale,
   Building2,
+  ShieldCheck,
+  Shield,
+  Sliders,
+  KeyRound,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+import { toast } from "react-hot-toast";
 import TermsAndConditionsModal, { LegalDocType } from "./TermsAndConditionsModal";
 import { useAuthStore } from "../../auth/store/AuthStore";
+import { useUserProfileStore } from "../../auth/store/UserProfileStore";
 import { useSettingsStore } from "../store/SettingsStore";
 
 const AccountActions: React.FC = () => {
   const navigate = useNavigate();
+  const { profile } = useUserProfileStore();
+  const storedRole = typeof window !== "undefined" ? localStorage.getItem("role") : null;
+  const isAdmin =
+    profile?.position === "Administrator" ||
+    (profile as any)?.role === "admin" ||
+    storedRole === "admin";
+
   const [isLegalModalOpen, setIsLegalModalOpen] = useState(false);
   const [activeLegalDoc, setActiveLegalDoc] = useState<LegalDocType>("terms");
   const [isStatementModalOpen, setIsStatementModalOpen] = useState(false);
   const [isDeactivateModalOpen, setIsDeactivateModalOpen] = useState(false);
   const [deactivateConfirmed, setDeactivateConfirmed] = useState(false);
   const [deactivateSuccess, setDeactivateSuccess] = useState(false);
+
+  // Security preferences state
+  const [mfaUpdating, setMfaUpdating] = useState(false);
+  const [loginNotifyUpdating, setLoginNotifyUpdating] = useState(false);
 
   // Change password state
   const [oldPassword, setOldPassword] = useState("");
@@ -40,11 +57,37 @@ const AccountActions: React.FC = () => {
 
   const { changePassword, isLoading, error, fieldErrors, setError } =
     useAuthStore();
-  const { fetchSettings } = useSettingsStore();
+  const { settings, fetchSettings, updateSettings } = useSettingsStore();
 
   useEffect(() => {
     fetchSettings();
   }, [fetchSettings]);
+
+  const handleToggleMfa = async () => {
+    if (!settings || mfaUpdating) return;
+    setMfaUpdating(true);
+    const nextVal = !settings.mfa_enabled;
+    const ok = await updateSettings({ mfa_enabled: nextVal });
+    if (ok) {
+      toast.success(nextVal ? "Two-Factor Authentication enabled!" : "Two-Factor Authentication disabled.");
+    } else {
+      toast.error("Failed to update 2FA setting");
+    }
+    setMfaUpdating(false);
+  };
+
+  const handleToggleLoginNotification = async () => {
+    if (!settings || loginNotifyUpdating) return;
+    setLoginNotifyUpdating(true);
+    const nextVal = settings.login_notifications === false;
+    const ok = await updateSettings({ login_notifications: nextVal });
+    if (ok) {
+      toast.success(nextVal ? "Login notifications enabled!" : "Login notifications muted.");
+    } else {
+      toast.error("Failed to update login notifications");
+    }
+    setLoginNotifyUpdating(false);
+  };
 
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -251,205 +294,372 @@ const AccountActions: React.FC = () => {
         </form>
       </div>
 
-      {/* 2. Institutional Legal, Compliance & Disclosures Suite */}
-      <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-stone-200 pb-3">
+      {/* 2. Multi-Factor Authentication & Login Alerts Card */}
+      <div className="p-0 sm:p-7 rounded-none sm:rounded-2xl bg-transparent sm:bg-white border-0 sm:border border-stone-200/80 shadow-none sm:shadow-xs space-y-5">
+        <div className="flex items-center gap-3">
+          <div className="p-2 sm:p-2.5 rounded-xl bg-amber-100 sm:bg-amber-50 text-amber-800 sm:text-amber-700 border border-amber-300 sm:border-amber-200 shrink-0">
+            <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5" />
+          </div>
           <div>
+            <h3 className="text-sm sm:text-base font-bold text-stone-900">
+              Account Security & Access Protection
+            </h3>
+            <p className="text-[11px] sm:text-xs text-stone-500">
+              Protect your apiculture assets with two-factor authentication and real-time login alerts.
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* 2FA Toggle Card */}
+          <div className="p-4 sm:p-5 rounded-xl border border-stone-200 bg-stone-50/60 flex flex-col justify-between gap-4">
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold uppercase tracking-wider text-stone-700">
+                  Two-Factor Authentication (2FA)
+                </span>
+                <span
+                  className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
+                    settings?.mfa_enabled
+                      ? "bg-emerald-100 text-emerald-800"
+                      : "bg-stone-200 text-stone-600"
+                  }`}
+                >
+                  {settings?.mfa_enabled ? "Enabled" : "Disabled"}
+                </span>
+              </div>
+              <p className="text-xs text-stone-500 leading-relaxed">
+                Require a unique 6-digit security verification code sent to your registered email on every sign-in attempt.
+              </p>
+            </div>
+
+            <div className="pt-2 flex items-center justify-between border-t border-stone-200/80">
+              <span className="text-xs font-medium text-stone-700">
+                {settings?.mfa_enabled ? "2FA Protection Active" : "Enable 2FA Verification"}
+              </span>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={!!settings?.mfa_enabled}
+                  onChange={handleToggleMfa}
+                  disabled={mfaUpdating}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-stone-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+              </label>
+            </div>
+          </div>
+
+          {/* Login Notifications Card */}
+          <div className="p-4 sm:p-5 rounded-xl border border-stone-200 bg-stone-50/60 flex flex-col justify-between gap-4">
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold uppercase tracking-wider text-stone-700">
+                  Login Security Notifications
+                </span>
+                <span
+                  className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
+                    settings?.login_notifications !== false
+                      ? "bg-emerald-100 text-emerald-800"
+                      : "bg-stone-200 text-stone-600"
+                  }`}
+                >
+                  {settings?.login_notifications !== false ? "Active" : "Muted"}
+                </span>
+              </div>
+              <p className="text-xs text-stone-500 leading-relaxed">
+                Receive an immediate email alert detailing timestamp, IP address, and client info whenever your account is accessed.
+              </p>
+            </div>
+
+            <div className="pt-2 flex items-center justify-between border-t border-stone-200/80">
+              <span className="text-xs font-medium text-stone-700">
+                {settings?.login_notifications !== false ? "Alerts Enabled" : "Enable Login Alerts"}
+              </span>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={settings?.login_notifications !== false}
+                  onChange={handleToggleLoginNotification}
+                  disabled={loginNotifyUpdating}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-stone-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 3. Conditional: Admin Privileges vs Investor Legal & Records Suite */}
+      {isAdmin ? (
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-stone-200 pb-3">
+            <div>
+              <h3 className="text-base font-bold text-stone-900">
+                Administrator Privileges & Platform Controls
+              </h3>
+              <p className="text-xs text-stone-500 mt-0.5">
+                Elevated privileges, governance tools, and audit monitoring for platform administrators.
+              </p>
+            </div>
+            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-900 bg-amber-100 px-2.5 py-1 rounded-full border border-amber-300 self-start sm:self-auto">
+              <Shield className="w-3.5 h-3.5 text-amber-700" />
+              Administrative Governance
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
+            {/* Card 1: System Access Controls */}
+            <div className="p-4 sm:p-5 rounded-2xl bg-white border border-stone-200/90 shadow-2xs flex flex-col justify-between gap-4">
+              <div className="space-y-3">
+                <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-800 border border-amber-200 flex items-center justify-center">
+                  <Sliders className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-stone-900">
+                    User Access & Permissions Control
+                  </h4>
+                  <p className="text-xs text-stone-500 mt-1 leading-relaxed">
+                    Manage team roles, regional assignments, and granular operational permissions across all platform members.
+                  </p>
+                </div>
+              </div>
+              <Link
+                to="/admin/settings"
+                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-stone-900 hover:bg-stone-800 text-white transition-colors w-full"
+              >
+                Open System Settings <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+
+            {/* Card 2: Security & Audit Logging */}
+            <div className="p-4 sm:p-5 rounded-2xl bg-white border border-stone-200/90 shadow-2xs flex flex-col justify-between gap-4">
+              <div className="space-y-3">
+                <div className="w-9 h-9 rounded-xl bg-stone-100 text-stone-700 border border-stone-200 flex items-center justify-center">
+                  <KeyRound className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-stone-900">
+                    System Audit Trail
+                  </h4>
+                  <p className="text-xs text-stone-500 mt-1 leading-relaxed">
+                    Immutable security log documenting permission updates, account status changes, and critical administrative actions.
+                  </p>
+                </div>
+              </div>
+              <Link
+                to="/admin/settings"
+                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-stone-100 hover:bg-stone-200 text-stone-800 transition-colors w-full"
+              >
+                View Audit Logs <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* 3. Institutional Legal, Compliance & Disclosures Suite */}
+          <div className="space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-stone-200 pb-3">
+              <div>
+                <h3 className="text-base font-bold text-stone-900">
+                  Legal, Compliance & Disclosures
+                </h3>
+                <p className="text-xs text-stone-500 mt-0.5">
+                  Binding agreements and statutory declarations governing your apiculture assets.
+                </p>
+              </div>
+              <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200 self-start sm:self-auto">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                Charter Signed & Legally Active
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
+              {/* Document 1: Terms of Service & Investor Charter */}
+              <div className="p-4 sm:p-5 rounded-2xl bg-white border border-stone-200/90 shadow-2xs flex flex-col justify-between gap-4">
+                <div className="space-y-3">
+                  <div className="w-9 h-9 rounded-xl bg-stone-100 text-stone-700 border border-stone-200 flex items-center justify-center">
+                    <Scale className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-stone-900">
+                      Investor Terms & Apiary Charter
+                    </h4>
+                    <p className="text-xs text-stone-500 mt-1 leading-relaxed">
+                      Core charter detailing hive sponsorship ownership, harvest profit-share calculations, and bi-annual distributions.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => openLegalDocument("terms")}
+                  className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-stone-100 hover:bg-stone-200 text-stone-800 transition-colors w-full"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" /> Read Investor Charter
+                </button>
+              </div>
+
+              {/* Document 2: Risk Disclosures */}
+              <div className="p-4 sm:p-5 rounded-2xl bg-white border border-stone-200/90 shadow-2xs flex flex-col justify-between gap-4">
+                <div className="space-y-3">
+                  <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-800 border border-amber-200 flex items-center justify-center">
+                    <AlertTriangle className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-stone-900">
+                      Agricultural Risk & Biological Disclosures
+                    </h4>
+                    <p className="text-xs text-stone-500 mt-1 leading-relaxed">
+                      Statutory risk disclosure on rainfall variability, floral nectar seasons, and One Hive's colony absconding mitigations.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => openLegalDocument("risk")}
+                  className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-stone-100 hover:bg-stone-200 text-stone-800 transition-colors w-full"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" /> Read Risk Disclosures
+                </button>
+              </div>
+
+              {/* Document 3: Honey Off-Take Agreement */}
+              <div className="p-4 sm:p-5 rounded-2xl bg-white border border-stone-200/90 shadow-2xs flex flex-col justify-between gap-4">
+                <div className="space-y-3">
+                  <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center justify-center">
+                    <Building2 className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-stone-900">
+                      100% Commercial Honey Off-Take Agreement
+                    </h4>
+                    <p className="text-xs text-stone-500 mt-1 leading-relaxed">
+                      Legally binding purchase commitment by One Hive Africa to purchase all harvested honey at wholesale benchmark floors.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => openLegalDocument("offtake")}
+                  className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-stone-100 hover:bg-stone-200 text-stone-800 transition-colors w-full"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" /> Read Off-Take Agreement
+                </button>
+              </div>
+
+              {/* Document 4: Privacy & Data Protection */}
+              <div className="p-4 sm:p-5 rounded-2xl bg-white border border-stone-200/90 shadow-2xs flex flex-col justify-between gap-4">
+                <div className="space-y-3">
+                  <div className="w-9 h-9 rounded-xl bg-stone-100 text-stone-700 border border-stone-200 flex items-center justify-center">
+                    <Lock className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-stone-900">
+                      Privacy Policy & KYC Protection
+                    </h4>
+                    <p className="text-xs text-stone-500 mt-1 leading-relaxed">
+                      Ghana Data Protection Act (Act 843) compliance framework covering investor national identification and payout encryption.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => openLegalDocument("privacy")}
+                  className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-stone-100 hover:bg-stone-200 text-stone-800 transition-colors w-full"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" /> Read Privacy Policy
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* 4. Statements & Concierge Support */}
+          <div className="space-y-3 sm:space-y-4">
             <h3 className="text-base font-bold text-stone-900">
-              Legal, Compliance & Disclosures
+              Financial Records & Investor Concierge
             </h3>
-            <p className="text-xs text-stone-500 mt-0.5">
-              Binding agreements and statutory declarations governing your apiculture assets.
-            </p>
-          </div>
-          <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200 self-start sm:self-auto">
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-            Charter Signed & Legally Active
-          </span>
-        </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
-          {/* Document 1: Terms of Service & Investor Charter */}
-          <div className="p-4 sm:p-5 rounded-2xl bg-white border border-stone-200/90 shadow-2xs flex flex-col justify-between gap-4">
-            <div className="space-y-3">
-              <div className="w-9 h-9 rounded-xl bg-stone-100 text-stone-700 border border-stone-200 flex items-center justify-center">
-                <Scale className="w-4 h-4" />
+            <div className="grid grid-cols-1 gap-2 sm:gap-4">
+              {/* Statement Request Card */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 p-3 sm:p-5 rounded-xl sm:rounded-2xl bg-white border border-stone-200/80 shadow-2xs">
+                <div className="flex items-start gap-3 sm:gap-4">
+                  <div className="p-2 sm:p-2.5 rounded-xl bg-amber-100 sm:bg-amber-50 text-amber-900 sm:text-amber-800 border border-amber-300 sm:border-amber-200 shrink-0">
+                    <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs sm:text-sm font-semibold text-stone-900">
+                      Certified Investment Statements & Tax Summaries
+                    </h4>
+                    <p className="text-xs text-stone-600 sm:text-stone-500 mt-0.5 max-w-xl leading-relaxed">
+                      Download certified records of your hive sponsorships, honey dividend receipts, and calendar year tax reports.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsStatementModalOpen(true)}
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold bg-stone-100 hover:bg-stone-200 text-stone-800 transition-colors shrink-0 min-h-[40px] sm:min-h-[44px]"
+                >
+                  <Download className="w-4 h-4" /> Download Statement
+                </button>
               </div>
-              <div>
-                <h4 className="text-sm font-bold text-stone-900">
-                  Investor Terms & Apiary Charter
-                </h4>
-                <p className="text-xs text-stone-500 mt-1 leading-relaxed">
-                  Core charter detailing hive sponsorship ownership, harvest profit-share calculations, and bi-annual distributions.
+
+              {/* Support Concierge Card */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 p-3 sm:p-5 rounded-xl sm:rounded-2xl bg-white border border-stone-200/80 shadow-2xs">
+                <div className="flex items-start gap-3 sm:gap-4">
+                  <div className="p-2 sm:p-2.5 rounded-xl bg-stone-100 text-stone-800 sm:text-stone-700 border border-stone-300 sm:border-stone-200 shrink-0">
+                    <HelpCircle className="w-4 h-4 sm:w-5 sm:h-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs sm:text-sm font-semibold text-stone-900">
+                      Investor Concierge & Feedback
+                    </h4>
+                    <p className="text-xs text-stone-600 sm:text-stone-500 mt-0.5 max-w-xl leading-relaxed">
+                      Have inquiries about apiary telemetry, custom institutional sponsorships, or need account assistance?
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => navigate("/feedback")}
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 text-emerald-900 sm:text-emerald-800 transition-colors shrink-0 min-h-[40px] sm:min-h-[44px]"
+                >
+                  Contact Concierge <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* 5. Danger Zone */}
+          <div className="p-3.5 sm:p-6 rounded-xl sm:rounded-2xl bg-rose-50/70 sm:bg-rose-50/50 border border-rose-300 sm:border-rose-200/80 space-y-3 sm:space-y-4">
+            <div className="flex items-start gap-3 sm:gap-3.5">
+              <div className="p-2 rounded-xl bg-rose-100 text-rose-700 border border-rose-200 shrink-0">
+                <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-xs sm:text-sm font-bold text-rose-900">
+                  Account Deactivation & Asset Redemption
+                </h3>
+                <p className="text-xs text-rose-700 mt-0.5 leading-relaxed max-w-2xl">
+                  Deactivating your investor account initiates cycle settlement. Any active beehive sponsorship packages will conclude naturally at the end of the ongoing harvest season, after which final yields and principal are wired to your registered account.
                 </p>
               </div>
             </div>
-            <button
-              type="button"
-              onClick={() => openLegalDocument("terms")}
-              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-stone-100 hover:bg-stone-200 text-stone-800 transition-colors w-full"
-            >
-              <ExternalLink className="w-3.5 h-3.5" /> Read Investor Charter
-            </button>
-          </div>
 
-          {/* Document 2: Risk Disclosures */}
-          <div className="p-4 sm:p-5 rounded-2xl bg-white border border-stone-200/90 shadow-2xs flex flex-col justify-between gap-4">
-            <div className="space-y-3">
-              <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-800 border border-amber-200 flex items-center justify-center">
-                <AlertTriangle className="w-4 h-4" />
-              </div>
-              <div>
-                <h4 className="text-sm font-bold text-stone-900">
-                  Agricultural Risk & Biological Disclosures
-                </h4>
-                <p className="text-xs text-stone-500 mt-1 leading-relaxed">
-                  Statutory risk disclosure on rainfall variability, floral nectar seasons, and One Hive's colony absconding mitigations.
-                </p>
-              </div>
+            <div className="pt-2 flex justify-stretch sm:justify-end">
+              <button
+                type="button"
+                onClick={() => setIsDeactivateModalOpen(true)}
+                className="w-full sm:w-auto px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-rose-700 bg-white border border-rose-300 hover:bg-rose-100 transition-colors shadow-2xs min-h-[44px] flex items-center justify-center"
+              >
+                Request Account Deactivation
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={() => openLegalDocument("risk")}
-              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-stone-100 hover:bg-stone-200 text-stone-800 transition-colors w-full"
-            >
-              <ExternalLink className="w-3.5 h-3.5" /> Read Risk Disclosures
-            </button>
           </div>
-
-          {/* Document 3: Honey Off-Take Agreement */}
-          <div className="p-4 sm:p-5 rounded-2xl bg-white border border-stone-200/90 shadow-2xs flex flex-col justify-between gap-4">
-            <div className="space-y-3">
-              <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center justify-center">
-                <Building2 className="w-4 h-4" />
-              </div>
-              <div>
-                <h4 className="text-sm font-bold text-stone-900">
-                  100% Commercial Honey Off-Take Agreement
-                </h4>
-                <p className="text-xs text-stone-500 mt-1 leading-relaxed">
-                  Legally binding purchase commitment by One Hive Africa to purchase all harvested honey at wholesale benchmark floors.
-                </p>
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => openLegalDocument("offtake")}
-              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-stone-100 hover:bg-stone-200 text-stone-800 transition-colors w-full"
-            >
-              <ExternalLink className="w-3.5 h-3.5" /> Read Off-Take Agreement
-            </button>
-          </div>
-
-          {/* Document 4: Privacy & Data Protection */}
-          <div className="p-4 sm:p-5 rounded-2xl bg-white border border-stone-200/90 shadow-2xs flex flex-col justify-between gap-4">
-            <div className="space-y-3">
-              <div className="w-9 h-9 rounded-xl bg-stone-100 text-stone-700 border border-stone-200 flex items-center justify-center">
-                <Lock className="w-4 h-4" />
-              </div>
-              <div>
-                <h4 className="text-sm font-bold text-stone-900">
-                  Privacy Policy & KYC Protection
-                </h4>
-                <p className="text-xs text-stone-500 mt-1 leading-relaxed">
-                  Ghana Data Protection Act (Act 843) compliance framework covering investor national identification and payout encryption.
-                </p>
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => openLegalDocument("privacy")}
-              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-stone-100 hover:bg-stone-200 text-stone-800 transition-colors w-full"
-            >
-              <ExternalLink className="w-3.5 h-3.5" /> Read Privacy Policy
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* 3. Statements & Concierge Support */}
-      <div className="space-y-3 sm:space-y-4">
-        <h3 className="text-base font-bold text-stone-900">
-          Financial Records & Investor Concierge
-        </h3>
-
-        <div className="grid grid-cols-1 gap-2 sm:gap-4">
-          {/* Statement Request Card */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 p-3 sm:p-5 rounded-xl sm:rounded-2xl bg-white border border-stone-200/80 shadow-2xs">
-            <div className="flex items-start gap-3 sm:gap-4">
-              <div className="p-2 sm:p-2.5 rounded-xl bg-amber-100 sm:bg-amber-50 text-amber-900 sm:text-amber-800 border border-amber-300 sm:border-amber-200 shrink-0">
-                <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
-              </div>
-              <div>
-                <h4 className="text-xs sm:text-sm font-semibold text-stone-900">
-                  Certified Investment Statements & Tax Summaries
-                </h4>
-                <p className="text-xs text-stone-600 sm:text-stone-500 mt-0.5 max-w-xl leading-relaxed">
-                  Download certified records of your hive sponsorships, honey dividend receipts, and calendar year tax reports.
-                </p>
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => setIsStatementModalOpen(true)}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold bg-stone-100 hover:bg-stone-200 text-stone-800 transition-colors shrink-0 min-h-[40px] sm:min-h-[44px]"
-            >
-              <Download className="w-4 h-4" /> Download Statement
-            </button>
-          </div>
-
-          {/* Support Concierge Card */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 p-3 sm:p-5 rounded-xl sm:rounded-2xl bg-white border border-stone-200/80 shadow-2xs">
-            <div className="flex items-start gap-3 sm:gap-4">
-              <div className="p-2 sm:p-2.5 rounded-xl bg-stone-100 text-stone-800 sm:text-stone-700 border border-stone-300 sm:border-stone-200 shrink-0">
-                <HelpCircle className="w-4 h-4 sm:w-5 sm:h-5" />
-              </div>
-              <div>
-                <h4 className="text-xs sm:text-sm font-semibold text-stone-900">
-                  Investor Concierge & Feedback
-                </h4>
-                <p className="text-xs text-stone-600 sm:text-stone-500 mt-0.5 max-w-xl leading-relaxed">
-                  Have inquiries about apiary telemetry, custom institutional sponsorships, or need account assistance?
-                </p>
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => navigate("/feedback")}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 text-emerald-900 sm:text-emerald-800 transition-colors shrink-0 min-h-[40px] sm:min-h-[44px]"
-            >
-              Contact Concierge <ArrowRight className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* 4. Danger Zone */}
-      <div className="p-3.5 sm:p-6 rounded-xl sm:rounded-2xl bg-rose-50/70 sm:bg-rose-50/50 border border-rose-300 sm:border-rose-200/80 space-y-3 sm:space-y-4">
-        <div className="flex items-start gap-3 sm:gap-3.5">
-          <div className="p-2 rounded-xl bg-rose-100 text-rose-700 border border-rose-200 shrink-0">
-            <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <h3 className="text-xs sm:text-sm font-bold text-rose-900">
-              Account Deactivation & Asset Redemption
-            </h3>
-            <p className="text-xs text-rose-700 mt-0.5 leading-relaxed max-w-2xl">
-              Deactivating your investor account initiates cycle settlement. Any active beehive sponsorship packages will conclude naturally at the end of the ongoing harvest season, after which final yields and principal are wired to your registered account.
-            </p>
-          </div>
-        </div>
-
-        <div className="pt-2 flex justify-stretch sm:justify-end">
-          <button
-            type="button"
-            onClick={() => setIsDeactivateModalOpen(true)}
-            className="w-full sm:w-auto px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-rose-700 bg-white border border-rose-300 hover:bg-rose-100 transition-colors shadow-2xs min-h-[44px] flex items-center justify-center"
-          >
-            Request Account Deactivation
-          </button>
-        </div>
-      </div>
+        </>
+      )}
 
       {/* Statement Download Modal */}
       {isStatementModalOpen && (

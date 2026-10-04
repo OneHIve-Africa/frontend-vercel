@@ -12,7 +12,6 @@ import {
 import { useUserProfileStore } from "@/v1/features/auth/store/UserProfileStore";
 import { useAuthStore } from "@/v1/features/auth/store/AuthStore";
 import { useSidebar } from "@/v1/context/SidebarContext";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/Avatar";
 
 const Sidebar: React.FC = () => {
   const location = useLocation();
@@ -39,7 +38,11 @@ const Sidebar: React.FC = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const isAdmin = profile?.position === "Administrator";
+  const role = typeof window !== "undefined" ? localStorage.getItem("role") : null;
+  const isAdmin =
+    profile?.position === "Administrator" ||
+    (profile as any)?.role === "admin" ||
+    role === "admin";
   const brandColorBg = isAdmin ? "bg-oha_secondary" : "bg-oha_primary";
 
   const handleLogoutClick = () => {
@@ -53,11 +56,6 @@ const Sidebar: React.FC = () => {
       "You're about to log out. Save your work so the hive stays happy."
     );
     setConfirmOpen(true);
-  };
-
-  const getInitials = (firstName?: string, lastName?: string) => {
-    if (!firstName && !lastName) return "U";
-    return `${firstName?.charAt(0) || ""}${lastName?.charAt(0) || ""}`.toUpperCase();
   };
 
   const sidebarVariants: Variants = {
@@ -314,56 +312,6 @@ const Sidebar: React.FC = () => {
                 )}
               </AnimatePresence>
             </button>
-          </div>
-
-          {/* User Profile Avatar / Card */}
-          <div className="w-full flex justify-center mt-1">
-            <div
-              onClick={() =>
-                navigate(isAdmin ? "/admin/settings" : "/settings")
-              }
-              title={
-                !isOpen
-                  ? `${profile?.first_name || "User"} Profile`
-                  : undefined
-              }
-              className={`cursor-pointer transition-all duration-200 flex items-center ${
-                isOpen
-                  ? "w-full p-2 rounded-2xl gap-3 bg-stone-50/80 hover:bg-stone-100 border border-stone-200/60"
-                  : "p-0.5 hover:scale-105"
-              }`}
-            >
-              <Avatar className="w-10 h-10 ring-2 ring-stone-200 hover:ring-oha_primary transition-all shrink-0">
-                {profile?.profile_image_url ? (
-                  <AvatarImage src={profile.profile_image_url} alt="Profile" />
-                ) : (
-                  <AvatarFallback
-                    className={`text-xs font-bold text-white ${brandColorBg}`}
-                  >
-                    {getInitials(profile?.first_name, profile?.last_name)}
-                  </AvatarFallback>
-                )}
-              </Avatar>
-
-              <AnimatePresence initial={false}>
-                {isOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, width: 0, x: -6 }}
-                    animate={{ opacity: 1, width: "auto", x: 0 }}
-                    exit={{ opacity: 0, width: 0, x: -6 }}
-                    transition={{ duration: 0.18, ease: "easeInOut" }}
-                    className="flex flex-col min-w-0 overflow-hidden leading-tight text-left"
-                  >
-                    <span className="text-sm font-semibold text-stone-900 truncate">
-                      {profile?.first_name} {profile?.last_name}
-                    </span>
-                    <span className="text-xs text-stone-500 truncate">
-                      {isAdmin ? "Administrator" : "Investor"}
-                    </span>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
           </div>
         </div>
 

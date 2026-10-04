@@ -38,7 +38,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useUserProfileStore } from "@/v1/features/auth/store/UserProfileStore";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/Popover";
 import { useAuthStore } from "@/v1/features/auth/store/AuthStore";
-import { Settings, LogOut } from "lucide-react";
+import { LogOut, ChevronDown, User, Sliders } from "lucide-react";
 import GlobalInvestmentAlert from "@/v1/components/common/GlobalInvestmentAlert";
 import { useNotificationStore } from "@/v1/features/notifications/store/NotificationStore";
 import type {
@@ -319,19 +319,37 @@ const Header: React.FC = () => {
     profile_image_url?: string;
     role?: string;
     position?: string;
+    email?: string;
   };
 
   const { logout } = useAuthStore();
   const profile = rawProfile as EnhancedProfile;
   const navigate = useNavigate();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  const storedRole = typeof window !== "undefined" ? localStorage.getItem("role") : null;
+  const isAdmin =
+    profile?.role === "admin" ||
+    profile?.position === "Administrator" ||
+    storedRole === "admin";
 
   useEffect(() => {
     fetchProfile();
   }, [fetchProfile]);
 
-  const getInitials = (firstName: string, lastName: string) => {
-    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+  const getInitials = (firstName?: string, lastName?: string) => {
+    if (!firstName && !lastName) return "U";
+    return `${firstName?.charAt(0) || ""}${lastName?.charAt(0) || ""}`.toUpperCase();
   };
+
+  const avatarSeed =
+    profile?.email ||
+    (profile?.first_name ? `${profile.first_name}-${profile.last_name}` : "admin");
+  const defaultAvatar = `https://blobatar.dev/avatar/${encodeURIComponent(avatarSeed)}`;
+  const avatarSrc =
+    profile?.profile_image_url && profile.profile_image_url.trim() !== ""
+      ? profile.profile_image_url
+      : defaultAvatar;
 
   const handleLogout = async () => {
     const success = await logout();
@@ -351,67 +369,113 @@ const Header: React.FC = () => {
           <img src={logo} alt="Logo" className="h-8 mt-3" />
         </Link>
 
-
-
-        <div className="ml-auto flex items-center gap-5">
+        <div className="ml-auto flex items-center gap-4">
           <HeaderNotifications />
 
-          <Popover>
+          <Popover open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
             <PopoverTrigger asChild>
-              <div className="flex items-center gap-2 cursor-pointer">
-                <Avatar>
-                  {profile?.profile_image_url ? (
-                    <AvatarImage
-                      src={profile.profile_image_url}
-                      alt={`${profile.first_name} ${profile.last_name}`}
-                    />
-                  ) : (
-                    <AvatarFallback className="text-white bg-oha_primary">
-                      {isLoading
-                        ? "..."
-                        : profile
-                          ? getInitials(profile.first_name, profile.last_name)
-                          : ""}
-                    </AvatarFallback>
-                  )}
+              <button
+                type="button"
+                className="flex items-center gap-2.5 p-1 pr-2 rounded-full md:rounded-xl hover:bg-stone-100 transition-colors cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-oha_primary/30 select-none group text-left border-none bg-transparent"
+                aria-label="User navigation menu"
+              >
+                <Avatar className="w-9 h-9 ring-2 ring-stone-200 group-hover:ring-oha_primary transition-all shrink-0">
+                  <AvatarImage
+                    src={avatarSrc}
+                    alt={profile ? `${profile.first_name} ${profile.last_name}` : "User"}
+                  />
+                  <AvatarFallback className="text-white bg-oha_primary font-bold text-xs">
+                    {isLoading
+                      ? "..."
+                      : getInitials(profile?.first_name, profile?.last_name)}
+                  </AvatarFallback>
                 </Avatar>
-                <div className="hidden md:block">
-                  <h2 className="text-sm font-semibold">
+                <div className="hidden md:flex flex-col min-w-0 leading-tight">
+                  <h2 className="text-sm font-semibold text-stone-900 truncate max-w-[140px]">
                     {isLoading
                       ? "Loading..."
                       : profile
                         ? `${profile.first_name} ${profile.last_name}`
-                        : ""}
+                        : "User"}
                   </h2>
-                  <h3 className="text-xs font-medium text-oha_primary">
-                    {profile?.role === "admin" ||
-                      profile?.position === "Administrator"
-                      ? "Administrator"
-                      : "Investor"}
+                  <h3 className="text-xs font-medium text-oha_primary truncate">
+                    {isAdmin ? "Administrator" : "Investor"}
                   </h3>
                 </div>
-              </div>
+                <ChevronDown
+                  className={`hidden md:block w-4 h-4 text-stone-400 group-hover:text-stone-700 transition-transform duration-200 shrink-0 ${
+                    isDropdownOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
             </PopoverTrigger>
-            <PopoverContent className="w-56 p-0 bg-white border-none rounded mt-4 mr-2">
-              <div className="flex flex-col">
+            <PopoverContent
+              align="end"
+              sideOffset={8}
+              className="w-64 p-1.5 bg-white border border-stone-200/90 rounded-2xl shadow-xl shadow-stone-900/10 z-[100] outline-none"
+            >
+              {/* Header profile info inside popover */}
+              <div className="px-3 py-2.5 mb-1 border-b border-stone-100 bg-stone-50/80 rounded-xl">
+                <div className="flex items-center justify-between gap-1.5">
+                  <p className="text-sm font-semibold text-stone-900 truncate">
+                    {profile?.first_name ? `${profile.first_name} ${profile.last_name}` : "My Account"}
+                  </p>
+                  <span className={`text-[10px] px-1.5 py-0.2 rounded-md font-semibold ${
+                    isAdmin ? "bg-amber-100 text-amber-900 border border-amber-200" : "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                  }`}>
+                    {isAdmin ? "Admin" : "Investor"}
+                  </span>
+                </div>
+                <p className="text-xs text-stone-500 truncate mt-0.5">
+                  {profile?.email || (isAdmin ? "admin@onehive.africa" : "investor@onehive.africa")}
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-0.5">
+                {/* 1. Actual Personal Profile Settings */}
                 <Link
-                  to={
-                    profile?.role === "admin" ||
-                      profile?.position === "Administrator"
-                      ? "/admin/settings"
-                      : "/settings"
-                  }
-                  className="flex items-center gap-2 px-4 py-3 rounded-md hover:bg-gray-50 hover:text-oha_primary transition-colors"
+                  to="/settings/profile"
+                  onClick={() => setIsDropdownOpen(false)}
+                  className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium text-stone-700 hover:text-oha_primary hover:bg-stone-50 transition-colors"
                 >
-                  <Settings className="w-4 h-4" />
-                  <span className="font-medium">Profile Settings</span>
+                  <div className="p-1 rounded-lg bg-stone-100 text-stone-600">
+                    <User className="w-3.5 h-3.5" />
+                  </div>
+                  <div className="flex flex-col min-w-0 leading-tight">
+                    <span className="font-semibold text-stone-800 text-xs">Profile Settings</span>
+                    <span className="text-[10px] text-stone-400">Personal info, photo & password</span>
+                  </div>
                 </Link>
+
+                {/* 2. Admin System Settings (User Access Controls, Audit Logs, etc.) */}
+                {isAdmin && (
+                  <Link
+                    to="/admin/settings"
+                    onClick={() => setIsDropdownOpen(false)}
+                    className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium text-stone-700 hover:text-amber-800 hover:bg-amber-50/70 transition-colors"
+                  >
+                    <div className="p-1 rounded-lg bg-amber-100/70 text-amber-800">
+                      <Sliders className="w-3.5 h-3.5" />
+                    </div>
+                    <div className="flex flex-col min-w-0 leading-tight">
+                      <span className="font-semibold text-stone-800 text-xs">System Settings</span>
+                      <span className="text-[10px] text-stone-400">User access, audit logs & config</span>
+                    </div>
+                  </Link>
+                )}
+
+                <div className="my-1 h-px bg-stone-100" />
+
                 <button
-                  onClick={handleLogout}
-                  className="flex items-center gap-2 px-4 py-3 rounded-md hover:bg-gray-50 text-red-600 hover:text-red-700 transition-colors text-left cursor-pointer mt-1"
+                  type="button"
+                  onClick={() => {
+                    setIsDropdownOpen(false);
+                    handleLogout();
+                  }}
+                  className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-rose-600 hover:bg-rose-50 hover:text-rose-700 transition-colors text-left cursor-pointer w-full"
                 >
-                  <LogOut className="w-4 h-4" />
-                  <span className="font-medium">Logout</span>
+                  <LogOut className="w-3.5 h-3.5 text-rose-500" />
+                  <span>Logout</span>
                 </button>
               </div>
             </PopoverContent>

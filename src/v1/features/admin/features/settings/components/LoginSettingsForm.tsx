@@ -7,6 +7,7 @@ import { toast } from "react-hot-toast";
 const LoginSettingsForm: React.FC = () => {
   const [config, setConfig] = useState<Partial<SystemConfig>>({
     require_2fa: false,
+    login_notifications: true,
     password_expiry_days: 90,
     session_timeout_minutes: 60,
   });
@@ -88,6 +89,23 @@ const LoginSettingsForm: React.FC = () => {
                         type="checkbox" 
                         name="require_2fa"
                         checked={config.require_2fa || false} 
+                        onChange={handleChange}
+                        className="sr-only peer" 
+                    />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-oha_primary rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-oha_primary"></div>
+                </label>
+            </div>
+
+            <div className="flex items-center justify-between p-4 border rounded-lg bg-gray-50">
+                <div>
+                    <h4 className="font-medium text-gray-800">Login Security Notifications</h4>
+                    <p className="text-sm text-gray-500">Send email notification alerts on new logins across the platform.</p>
+                </div>
+                 <label className="relative inline-flex items-center cursor-pointer">
+                    <input 
+                        type="checkbox" 
+                        name="login_notifications"
+                        checked={config.login_notifications !== false} 
                         onChange={handleChange}
                         className="sr-only peer" 
                     />

@@ -4,6 +4,7 @@ import { create } from "zustand";
 import AuthApi from "../../../api/AuthApi";
 import {
   LoginRequest,
+  LoginResponse,
   RegisterRequest,
   PasswordResetRequest,
   VerifyOTPRequest,
@@ -12,6 +13,7 @@ import {
 } from "../../../api/types";
 import { useUserProfileStore } from "./UserProfileStore";
 import { UserProfile } from "@/v1/api/UserProfileApi";
+import { toast } from "react-hot-toast";
 
 // Define enhanced API response types
 interface ApiResponseWithFieldErrors {
@@ -20,20 +22,32 @@ interface ApiResponseWithFieldErrors {
   status?: number;
 }
 
+export interface LoginResult {
+  success: boolean;
+  mfaRequired?: boolean;
+  email?: string;
+  message?: string;
+}
+
 interface AuthState {
   isAuthenticated: boolean;
   isFirstTime: boolean;
   isLoading: boolean;
   error: string | null;
   fieldErrors: Record<string, string[]> | null;
+  mfaRequired: boolean;
+  mfaEmail: string | null;
   // State setters
   setIsAuthenticated: (value: boolean) => void;
   setIsFirstTime: (value: boolean) => void;
   setIsLoading: (value: boolean) => void;
   setError: (error: string | null) => void;
   setFieldErrors: (fieldErrors: Record<string, string[]> | null) => void;
+  setMfaRequired: (required: boolean, email?: string | null) => void;
   // Auth actions
-  login: (credentials: LoginRequest) => Promise<boolean>;
+  login: (credentials: LoginRequest) => Promise<LoginResult>;
+  verifyMFA: (data: { email: string; otp: string }) => Promise<boolean>;
+  resendMFA: (email: string) => Promise<boolean>;
   register: (userData: RegisterRequest) => Promise<boolean>;
   logout: () => Promise<boolean>;
   changePassword: (data: ChangePasswordRequest) => Promise<boolean>;
@@ -45,12 +59,46 @@ interface AuthState {
 
 const authApi = AuthApi.getInstance();
 
+const handleAuthSuccess = (data: LoginResponse, set: any) => {
+  const priorLogin = localStorage.getItem("has_logged_in_before") === "true";
+  localStorage.setItem("access_token", data.access || "");
+  localStorage.setItem("refresh_token", data.refresh || "");
+  localStorage.setItem("has_logged_in_before", "true");
+  // Persist role for routing to correct profile endpoint (admin/farmer/investor)
+  if ((data as any).role) {
+    localStorage.setItem("role", (data as any).role);
+  }
+
+  // Start with server profile
+  let serverProfile = data.profile as UserProfile;
+  // If this device has logged in before, treat user as NOT first-time locally
+  // to avoid redirecting existing users to onboarding erroneously.
+  if (priorLogin && serverProfile?.is_first) {
+    serverProfile = { ...serverProfile, is_first: false } as UserProfile;
+  }
+
+  // Persist and push to stores
+  localStorage.setItem("user", JSON.stringify(serverProfile));
+  useUserProfileStore.getState().setProfile(serverProfile);
+
+  const isFirst = !!serverProfile?.is_first;
+  set({
+    isAuthenticated: true,
+    isFirstTime: isFirst,
+    isLoading: false,
+    mfaRequired: false,
+    mfaEmail: null,
+  });
+};
+
 const useAuthStore = create<AuthState>((set) => ({
   isAuthenticated: !!localStorage.getItem("access_token"),
   isFirstTime: useUserProfileStore.getState().profile?.is_first ?? false,
   isLoading: false,
   error: null,
   fieldErrors: null,
+  mfaRequired: false,
+  mfaEmail: null,
 
   // State setters
   setIsAuthenticated: (value: boolean) => set({ isAuthenticated: value }),
@@ -59,6 +107,8 @@ const useAuthStore = create<AuthState>((set) => ({
   setError: (error: string | null) => set({ error }),
   setFieldErrors: (fieldErrors: Record<string, string[]> | null) =>
     set({ fieldErrors }),
+  setMfaRequired: (required: boolean, email: string | null = null) =>
+    set({ mfaRequired: required, mfaEmail: email }),
 
   // Auth actions
   login: async (credentials: LoginRequest) => {
@@ -77,45 +127,70 @@ const useAuthStore = create<AuthState>((set) => ({
         } else {
           set({ error: response.error, isLoading: false });
         }
-        return false;
+        return { success: false };
       }
       if (response.data) {
-        const priorLogin = localStorage.getItem("has_logged_in_before") === "true";
-        localStorage.setItem("access_token", response.data.access);
-        localStorage.setItem("refresh_token", response.data.refresh);
-        localStorage.setItem("has_logged_in_before", "true");
-        // Persist role for routing to correct profile endpoint (admin/farmer/investor)
-        if ((response.data as any).role) {
-          localStorage.setItem("role", (response.data as any).role);
+        if (response.data.mfa_required) {
+          set({
+            isLoading: false,
+            mfaRequired: true,
+            mfaEmail: credentials.email,
+          });
+          return {
+            success: false,
+            mfaRequired: true,
+            email: credentials.email,
+            message: response.data.message || "Verification code sent to your email.",
+          };
         }
 
-        // Start with server profile
-        let serverProfile = response.data.profile as UserProfile;
-        // If this device has logged in before, treat user as NOT first-time locally
-        // to avoid redirecting existing users to onboarding erroneously.
-        if (priorLogin && serverProfile?.is_first) {
-          serverProfile = { ...serverProfile, is_first: false } as UserProfile;
-        }
-
-        // Persist and push to stores
-        localStorage.setItem("user", JSON.stringify(serverProfile));
-
-        useUserProfileStore.getState().setProfile(serverProfile);
-
-        const isFirst = !!serverProfile?.is_first;
-        set({
-          isAuthenticated: true,
-          isFirstTime: isFirst,
-          isLoading: false,
-        });
-        return true;
+        handleAuthSuccess(response.data, set);
+        return { success: true };
       }
-      return false;
+      return { success: false };
     } catch (error: any) {
       set({
         error: error.error || error.message || "An unexpected error occurred during login.",
         isLoading: false,
       });
+      return { success: false };
+    }
+  },
+
+  verifyMFA: async (data: { email: string; otp: string }) => {
+    set({ isLoading: true, error: null, fieldErrors: null });
+    try {
+      const response = await authApi.verifyMFA(data);
+      if (response.error) {
+        set({ error: response.error, isLoading: false });
+        return false;
+      }
+      if (response.data && response.data.access) {
+        handleAuthSuccess(response.data, set);
+        return true;
+      }
+      set({ error: "Failed to verify code.", isLoading: false });
+      return false;
+    } catch (error: any) {
+      set({
+        error: error.error || error.message || "An unexpected error occurred.",
+        isLoading: false,
+      });
+      return false;
+    }
+  },
+
+  resendMFA: async (email: string) => {
+    try {
+      const response = await authApi.resendMFA({ email });
+      if (response.error) {
+        toast.error(response.error);
+        return false;
+      }
+      toast.success(response.data?.message || "Verification code sent!");
+      return true;
+    } catch (err: any) {
+      toast.error("Failed to resend code.");
       return false;
     }
   },
